@@ -829,36 +829,186 @@ yield all
 
 #pdfpc.speaker-note("~80s. Three papers on one slide. The point to make out loud: deployment control is itself a collective behaviour, so the same tools apply to it. Green planning is joint work with Brogi and Forti in Pisa.")
 
+== Hand-written Policies, Measured
+
+#block(width: 100%, inset: .25em, radius: 6pt, fill: luma(250), stroke: (paint: ink.lighten(72%), thickness: .7pt))[
+  #table(
+    columns: (.85fr, 1fr, 1fr, 1fr),
+    gutter: .08em,
+    stroke: none,
+    comparison-header[Policy],
+    comparison-header[What it is told],
+    comparison-header[What it buys],
+    comparison-header[What it costs],
+    comparison-label(inset: (x: .55em, y: .4em))[#chip([A], fill: blue.lighten(88%), stroke: blue.lighten(38%)) Battery rule \ #text(size: .78em, weight: "regular", fill: ink.lighten(35%))[_ACSOS 2024_]],
+    comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[one threshold, one component: offload below 30%]],
+    comparison-cell(fill: green.lighten(94%), inset: (x: .45em, y: .4em))[#text(size: .68em)[more battery left at the end of the run]],
+    comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[bandwidth, not energy: extra hops to the surrogate]],
+    comparison-label(inset: (x: .55em, y: .4em))[#chip([B], fill: green.lighten(88%), stroke: green.lighten(35%)) Field regions \ #text(size: .78em, weight: "regular", fill: ink.lighten(35%))[_Internet of Things 2024_]],
+    comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[leaders resize their region by their own load]],
+    comparison-cell(fill: green.lighten(94%), inset: (x: .45em, y: .4em))[#text(size: .68em)[more devices offload at all; graceful failure recovery]],
+    comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[a stabilisation transient; depends on the topology]],
+    comparison-label(inset: (x: .55em, y: .4em))[#chip([C], fill: orange.lighten(85%), stroke: orange.lighten(40%)) Green planner \ #text(size: .78em, weight: "regular", fill: ink.lighten(35%))[_COORDINATION 2025_]],
+    comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[an energy/carbon objective, plus hard latency bounds]],
+    comparison-cell(fill: green.lighten(94%), inset: (x: .45em, y: .4em))[#text(size: .68em)[#bold[a third of the energy] and carbon of peer-to-peer]],
+    comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[intra-component latency; replanning every 30 min]],
+  )
+]
+
+#v(.35em)
+#statement[
+  #text(size: .78em)[All three buy a real gain at a #bold[bounded, secondary cost] --- and all three need a person to say, in advance, what a good deployment is.]
+]
+
+#pdfpc.speaker-note("~75s. The concrete results behind the previous slide, one row each. A: the two charts in the paper say where the cost lands — the offloaded devices have more battery, not less, so the price is paid in messages. B: quality of service is the share of devices that manage to offload at all; the field-based policy beats the nearest-hop baseline once its regions settle, and can dip below it during the transient. It helps more on scale-free than on lobster topologies, because removing a node from a lobster network segments it. C: joint work with Brogi and Forti in Pisa — roughly a third of the energy at every network size, and the baseline's carbon tracks the day-night sinusoid exactly because its deployment never changes. Then land the last line: that is the requirement the next slides drop.")
+
 == Learning the Placement
 
 #align(center)[
-  #cetz.canvas(length: 1.0cm, {
+  #cetz.canvas(length: 1.18cm, {
     import cetz.draw: *
 
-    let w = 4.6
-    let stage(x, title, subtitle, color) = {
-      rect((x - w / 2, -1.05), (x + w / 2, 1.05), radius: .12,
-        fill: color.lighten(90%), stroke: (paint: color.lighten(35%), thickness: .9pt))
-      content((x, .42), text(size: .44em, weight: "medium", fill: color.darken(15%))[#title], anchor: "center")
-      content((x, -.35), align(center)[#text(size: .34em, fill: ink.lighten(15%))[#subtitle]], anchor: "center")
+    // Four cards on one baseline. The two middle ones are the learned model, so
+    // they sit inside a dashed frame and the outer two read as plain data: the
+    // world goes in on the left, a decision comes out on the right.
+    let w = 4.3        // card width
+    let hh = 1.5       // card half-height
+    let pitch = 5.7
+    let xs = (-1.5, -.5, .5, 1.5).map(i => i * pitch)
+    let cy = .62       // centre of the glyph band inside a card
+    let bg = rgb("#fafafa")   // the slide fill, used to mask labels that sit on a line
+
+    // Shorten a segment at both ends, so an arrowhead never slides underneath
+    // the shape it points at.
+    let trim(from, to, head: .0, tail: .0) = {
+      let dx = to.at(0) - from.at(0)
+      let dy = to.at(1) - from.at(1)
+      let len = calc.max(calc.sqrt(dx * dx + dy * dy), 1e-6)
+      (
+        (from.at(0) + dx / len * tail, from.at(1) + dy / len * tail),
+        (to.at(0) - dx / len * head, to.at(1) - dy / len * head),
+      )
     }
 
-    let xs = (-8.1, -2.7, 2.7, 8.1)
+    // The same small topology is drawn twice — once as the input state, once as
+    // the output with the chosen hosts filled in — so the audience sees that the
+    // pipeline answers a question about the very graph it was given. Node shape
+    // carries the device class, line style carries the link type: that is the
+    // heterogeneity the encoder gets to see.
+    let topology(cx, chosen: ()) = {
+      let wire = ink.lighten(58%)
+      let cloud = (cx, cy + .5)
+      let edges = ((cx - .8, cy - .06), (cx + .8, cy - .06))
+      let devices = ((cx - 1.24, cy - .62), (cx - .36, cy - .62), (cx + 1.12, cy - .62))
 
-    stage(xs.at(0), [Heterogeneous graph], [device / edge / cloud nodes \ typed links and features], red)
-    stage(xs.at(1), [GNN encoder], [message passing over \ node and edge types], blue)
-    stage(xs.at(2), [Deep Q-network], [Q-value per \ placement action], green)
-    stage(xs.at(3), [Deployment], [chosen component \ placement], orange)
+      for e in edges { line(cloud, e, stroke: (paint: wire, thickness: .7pt)) }
+      for (d, e) in devices.zip((edges.at(0), edges.at(0), edges.at(1))) {
+        line(d, e, stroke: (paint: wire, thickness: .6pt, dash: "dashed"))
+      }
 
-    for x in xs.slice(0, 3) {
-      line((x + w / 2 + .12, 0), (x + 5.4 - w / 2 - .12, 0),
-        stroke: (paint: ink.lighten(45%), thickness: 1.1pt), mark: (end: ">"))
+      // A chosen host is filled in the accent colour and haloed in its own
+      // outline; the rest stay on a grey ramp that runs cloud -> edge -> device,
+      // so the three classes read apart even in monochrome.
+      let skin(id, tint) = if chosen.contains(id) {
+        (fill: orange.lighten(28%), stroke: (paint: orange.darken(12%), thickness: .9pt))
+      } else {
+        (fill: ink.lighten(tint), stroke: (paint: ink.lighten(38%), thickness: .8pt))
+      }
+      let halo = (paint: orange.lighten(50%), thickness: .7pt)
+
+      // cloud: a rounded slab
+      if chosen.contains("c") {
+        rect((cloud.at(0) - .6, cloud.at(1) - .31), (cloud.at(0) + .6, cloud.at(1) + .31),
+          radius: .14, fill: none, stroke: halo)
+      }
+      rect((cloud.at(0) - .46, cloud.at(1) - .18), (cloud.at(0) + .46, cloud.at(1) + .18),
+        radius: .09, ..skin("c", 68%))
+      // edge: squares
+      for (i, e) in edges.enumerate() {
+        if chosen.contains("e" + str(i)) {
+          rect((e.at(0) - .3, e.at(1) - .3), (e.at(0) + .3, e.at(1) + .3), radius: .07, fill: none, stroke: halo)
+        }
+        rect((e.at(0) - .17, e.at(1) - .17), (e.at(0) + .17, e.at(1) + .17), radius: .04, ..skin("e" + str(i), 80%))
+      }
+      // devices: dots
+      for (i, d) in devices.enumerate() {
+        if chosen.contains("d" + str(i)) { circle(d, radius: .27, fill: none, stroke: halo) }
+        circle(d, radius: .14, ..skin("d" + str(i), 88%))
+      }
     }
 
-    // reward feedback loop, right back to the graph
-    line((xs.at(3), -1.05), (xs.at(3), -2.15), (xs.at(0), -2.15), (xs.at(0), -1.05),
-      stroke: (paint: ink.lighten(50%), thickness: .9pt, dash: "dashed"), mark: (end: ">"))
-    content((0, -2.5), text(size: .34em, fill: ink.lighten(25%))[reward: latency, energy, load], anchor: "center")
+    // Message passing: four neighbours folding into one node.
+    let mp-glyph(cx, color) = {
+      let c = (cx, cy)
+      let nbrs = ((cx - 1.18, cy + .58), (cx + 1.18, cy + .58), (cx - 1.18, cy - .58), (cx + 1.18, cy - .58))
+      for n in nbrs {
+        let (a, b) = trim(n, c, head: .44, tail: .24)
+        line(a, b, stroke: (paint: color.lighten(35%), thickness: .8pt), mark: (end: ">", scale: .35))
+      }
+      for n in nbrs {
+        circle(n, radius: .16, fill: color.lighten(86%), stroke: (paint: color.lighten(25%), thickness: .8pt))
+      }
+      circle(c, radius: .32, fill: color.lighten(50%), stroke: (paint: color.darken(10%), thickness: 1pt))
+    }
+
+    // One Q-value per action, with the argmax standing out.
+    let q-glyph(cx, color) = {
+      let hs = (.36, .68, .26, .96, .48)
+      let step = .52
+      let x0 = cx - step * 2
+      let base = cy - .62
+      line((x0 - .44, base), (x0 + step * 4 + .44, base), stroke: (paint: ink.lighten(62%), thickness: .6pt))
+      for (i, h) in hs.enumerate() {
+        let x = x0 + i * step
+        let best = i == 3
+        rect((x - .15, base), (x + .15, base + h), radius: .03,
+          fill: if best { color.lighten(40%) } else { color.lighten(86%) },
+          stroke: (paint: if best { color.darken(12%) } else { color.lighten(38%) }, thickness: .7pt))
+      }
+      let bx = x0 + 3 * step
+      let top = base + hs.at(3) + .3
+      line((bx - .15, top), (bx, top - .2), (bx + .15, top), close: true,
+        fill: color.darken(8%), stroke: none)
+    }
+
+    // The card itself: glyph on top, name, then the one-line gloss.
+    let card(x, color, glyph, title, subtitle) = {
+      rect((x - w / 2, -hh), (x + w / 2, hh), radius: .16,
+        fill: color.lighten(95%), stroke: (paint: color.lighten(38%), thickness: .9pt))
+      glyph
+      content((x, -.62), text(size: .54em, weight: "medium", fill: color.darken(18%))[#title], anchor: "center")
+      content((x, -1.1), align(center)[#text(size: .4em, fill: ink.lighten(18%))[#subtitle]], anchor: "center")
+    }
+
+    // The learned part of the pipeline, framed off from the data at either end.
+    rect((xs.at(1) - w / 2 - .42, -hh - .42), (xs.at(2) + w / 2 + .42, hh + .42),
+      radius: .2, fill: none, stroke: (paint: ink.lighten(55%), thickness: .8pt, dash: "dashed"))
+    content((0, hh + .42), text(size: .4em, weight: "medium", fill: ink.lighten(22%))[learned policy],
+      frame: "rect", fill: bg, stroke: none, padding: .12, anchor: "center")
+
+    card(xs.at(0), ink, topology(xs.at(0)), [Heterogeneous graph], [device, edge and cloud hosts \ typed links and features])
+    card(xs.at(1), blue, mp-glyph(xs.at(1), blue), [GNN encoder], [message passing over \ node and edge types])
+    card(xs.at(2), green, q-glyph(xs.at(2), green), [Deep Q-network], [one Q-value per \ placement action])
+    card(xs.at(3), orange, topology(xs.at(3), chosen: ("c", "e0", "d2")), [Deployment], [components pinned \ to chosen hosts])
+
+    // What travels between the stages, named on the arrows. The two outer
+    // labels sit where the dashed frame crosses, so each one is masked with the
+    // slide background and the border passes behind it.
+    for (i, label) in (([features], [embeddings], [argmax])).enumerate() {
+      let a = xs.at(i) + w / 2 + .14
+      let b = xs.at(i + 1) - w / 2 - .14
+      line((a, 0), (b, 0), stroke: (paint: ink.lighten(45%), thickness: 1.1pt), mark: (end: ">", scale: .5))
+      content(((a + b) / 2, .36), text(size: .36em, fill: ink.lighten(32%))[#label],
+        frame: "rect", fill: bg, stroke: none, padding: (x: .1, y: .06), anchor: "center")
+    }
+
+    // The environment closes the loop: the deployment is executed, and what it
+    // costs comes back as the reward that trains the policy.
+    let ry = -2.7
+    line((xs.at(3), -hh), (xs.at(3), ry), (xs.at(0), ry), (xs.at(0), -hh),
+      stroke: (paint: ink.lighten(52%), thickness: .9pt, dash: "dashed"), mark: (end: ">", scale: .5))
+    content((0, ry), text(size: .38em, fill: ink.lighten(25%))[reward: latency, energy, load],
+      frame: "rect", fill: bg, stroke: none, padding: (x: .2, y: .08), anchor: "center")
   })
 ]
 
@@ -869,28 +1019,90 @@ yield all
 
 #pdfpc.speaker-note("~70s. Walk left to right, then the dashed feedback arrow. The novelty is the heterogeneous graph: earlier work flattens the topology and throws away the device diversity that makes placement hard.")
 
-== Evaluation
+== Informing the Policy with Collective State
 
-#components.side-by-side(columns: (1fr, 1fr), gutter: 1em)[
-  #placeholder(
-    [Scalability under pulverisation],
-    body: [From _Scalability through Pulverisation_ (FGCS 2024).],
-    height: 52%,
-  )
+#components.side-by-side(columns: (1.12fr, 1fr), gutter: .9em)[
+  === No device can see congestion
+
+  #text(size: .78em)[
+    - Congestion is caused #bold[by the offloading decisions themselves].
+    - It belongs to an area, not to a single device.
+    - A GNN can learn it, but it needs #bold[$O(D)$ layers] to cover a region of diameter $D$.
+  ]
+
+  #v(.25em)
+
+  #feature-block("Compute it instead of learning it")[
+    #text(size: .84em)[An #bold[aggregate program] runs on the same devices, over the same neighbourhood, and computes a #bold[density field]. Each device gets it as one extra feature before the GNN reads the graph.]
+  ]
 ][
-  #placeholder(
-    [Learned offloading],
-    body: [From _Heterogeneous GNN for collective-task offloading_ (FGCS 2026), against heuristic and flat-GNN baselines.],
-    height: 52%,
-  )
+  #mini-card([Cheap, and nothing waits], [One round costs $O(|N(d)|)$: only what the neighbours sent. The field is self-stabilising, so a late message is absorbed without a barrier.], color: blue)
+  #v(.3em)
+  #mini-card([Still decentralised], [Training uses the global graph, execution never does. At run time each device reads its own Q-values from its own head.], color: orange)
 ]
 
-#v(.3em)
-#statement(fill: red.lighten(92%), stroke: red)[
-  #text(size: .82em)[*To fill before the review:* both plots have to be exported from the papers, no result figures are in the thesis repository.]
+#v(.2em)
+#statement(fill: green.lighten(88%), stroke: green)[
+  #text(size: .72em)[The same paradigm that #bold[expresses] collective behaviour can also #bold[measure] it. The learner only has to decide what to do about congestion, not how to compute it.]
 ]
 
-#pdfpc.speaker-note("~50s. Fill this slide. Once the figures are in, quote the headline numbers from each paper.")
+#pdfpc.speaker-note("~70s. Key slide of the chapter. Start from why congestion is the hard case: it is caused by the very decisions being taken, and no single device can see it. A GNN could learn it, but it would have to be deep enough to carry information across the whole crowded region, so we would pay parameters and training time for something aggregate computing already gives us for free. So we compute the density field with an aggregate program on the same devices and pass it to the network as one extra feature. The two cards answer the usual objections: what a round costs, and why nothing has to wait. Then the closing line: the same paradigm we use to write collective behaviour is what measures it.")
+
+== What the Collective Term Buys
+
+#components.side-by-side(columns: (1fr, 1fr), gutter: .8em)[
+  #align(center)[
+    #image("images/idhgql-density-ac.svg", width: 57%)
+    #v(-.45em)
+    #text(size: .58em, fill: ink.lighten(25%))[with the collective density field]
+  ]
+][
+  #align(center)[
+    #image("images/idhgql-density-no-ac.svg", width: 57%)
+    #v(-.45em)
+    #text(size: .58em, fill: ink.lighten(25%))[without it (ablation)]
+  ]
+]
+
+#v(.15em)
+
+#components.side-by-side(columns: (1fr, 1fr, 1fr), gutter: .55em)[
+  #mini-card([Differentiated], [Dense zones stay local; sparse regions offload.], color: green)
+][
+  #mini-card([Partial at the fringe], [Boundary devices split --- what no binary rule expresses.], color: blue)
+][
+  #mini-card([Uniform without it], [Every device settles on the same fraction.], color: red)
+]
+
+#v(.2em)
+#statement(fill: green.lighten(88%), stroke: green)[
+  #text(size: .74em)[What makes the policy context-aware is #bold[not the learner and not the graph], but the collective computation feeding them. #h(.5em) #chip[FGCS 2026 · IDHGQL]]
+]
+
+#pdfpc.speaker-note("~70s. The ablation is the chapter's central evidence, so give it time. Left: the trained policy is spatially differentiated, the two dense zones stay local, the sparse regions offload, and the devices at the fringe split their components. That middle group is the one to point at: partial deployments are exactly what the per-component action space was introduced to make available, and no binary offload-or-not rule can express them. Right: same learner, same heterogeneous message passing, same environment, only the density term removed, and every device settles on roughly the same partial offloading regardless of position. If asked about generalisation: the trained network was then applied unchanged while three devices walked out of a dense zone, and by t=150 they had switched to offloading on their own, following the field rather than the positions it was trained on.")
+
+// == Evaluation
+
+// #components.side-by-side(columns: (1fr, 1fr), gutter: 1em)[
+//   #placeholder(
+//     [Scalability under pulverisation],
+//     body: [From _Scalability through Pulverisation_ (FGCS 2024).],
+//     height: 52%,
+//   )
+// ][
+//   #placeholder(
+//     [Learned offloading],
+//     body: [From _Heterogeneous GNN for collective-task offloading_ (FGCS 2026), against heuristic and flat-GNN baselines.],
+//     height: 52%,
+//   )
+// ]
+
+// #v(.3em)
+// #statement(fill: red.lighten(92%), stroke: red)[
+//   #text(size: .82em)[*To fill before the review:* both plots have to be exported from the papers, no result figures are in the thesis repository.]
+// ]
+
+// #pdfpc.speaker-note("~50s. Fill this slide. Once the figures are in, quote the headline numbers from each paper.")
 
 = Real-World Demonstrator <demo>
 
