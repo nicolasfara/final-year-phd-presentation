@@ -80,6 +80,8 @@
 #set text(font: "Fira Sans", weight: "light", size: 20pt)
 #show math.equation: set text(font: "Fira Math")
 
+#set list(marker: text(size: 1.4em, baseline: 0.1em)[•])
+
 #set raw(tab-size: 2)
 #show raw: set text(font: "JetBrains Mono", weight: "light", size: 0.8em)
 #show raw.where(block: false): set text(size: 1.2em)
@@ -106,7 +108,7 @@
 
 #components.side-by-side(columns: (1.15fr, 1fr), gutter: 1em)[
   #feature-block("The continuum")[
-    _Devices, edge, fog and cloud treated as one pool of computational resources, with no fixed boundary between tiers._
+    _Devices, edge, fog and cloud treated as one pool of computational resources, with no fixed boundary between tiers._ #cite(<moreschini2022continuum>)
   ]
 
   #text(size: .88em)[
@@ -125,32 +127,206 @@
 == Collective Adaptive Systems
 
 #components.side-by-side(columns: (1fr, 1fr), gutter: 1.2em)[
-  === What they are
+  #feature-block("Collective-adaptive Systems")[
+    _Distributed networks of independent, heterogeneous entities that interact and self-organize without central control to achieve individual or group goals._ #cite(<ferscha2015collective>)
+  ]
 
-  Large sets of devices that *pursue a common goal* using only _local interactions_.
-
-  #text(size: .9em)[
-    - The number of participants is not fixed.
-    - Global behaviour follows from device-local rules.
-    - Resilience and scalability come from the structure itself.
+  #text(size: .88em)[
+    - Decentralization: no single coordinator
+    - Emergence: global behaviour arises from local interactions
+    - Scalability: can grow to thousands of nodes
   ]
 ][
-  === Where they run
-
-  #mini-card([IoT ecosystems], [Smart cities, buildings, wearable and pervasive sensing.], color: blue)
-  #v(.4em)
-  #mini-card([Swarm robotics], [Drone fleets and robot teams coordinating in the field.], color: green)
+  #figure(image("images/cas.jpg", width: 100%))
+]
+// #v(1em)
+#components.side-by-side[
+  #mini-card([IoT systems], [], color: blue)
+][
+  #mini-card([Swarm robotics], [], color: green)
+][
+  #mini-card([Smart cities], [], color: red)
+][
+  #mini-card([Autonomous vehicles], [], color: orange)
 ]
 
 #pdfpc.speaker-note("~45s. Bridge slide: these systems are the workload, the continuum is the substrate. The talk is about the mismatch between the two.")
 
 == Macroprogramming
 
-#statement[
-  Describe the behaviour of the whole collective as one program, instead of writing a program per node and relying on the global behaviour to emerge.
+#components.side-by-side[
+  #feature-block("Macroprogramming")[
+    _The theory and practice of conveniently expressing the macroscopic behaviour of a system as a single program, instead of writing a program per node and relying on the global behaviour to emerge._ #cite(<casadei2023macroprogramming>)
+  ]
+
+  #text(size: .88em)[
+    - The system is *programmed as a whole*
+    - The program is *compiled down to micro-programs* for each node
+    - The global behaviour *emerges* from the local effects of the micro-programs
+  ]
+][
+  #align(center)[
+  // Macroprogramming at a glance: a macro-program written against
+  // macro-abstractions is mapped onto the micro-programs run by the single
+  // entities, whose effects in the environment emerge as macro-observables.
+  #cetz.canvas(length: 0.95cm, {
+    import cetz.draw: *
+
+    let prog-fill = ink.lighten(96%)
+    let blk-fill = ink.lighten(85%)
+    let ent-fill = ink.lighten(70%)
+    let edge = ink.lighten(48%)
+    let flow = ink.lighten(35%)
+
+    let lbl(pos, body, anchor: "center", size: .33em, fill: ink.lighten(12%)) = content(
+      pos,
+      text(size: size, fill: fill)[#body],
+      anchor: anchor,
+    )
+
+    // A straight arrow whose head stops `gap` before the target, so it never
+    // slides underneath the shape it points at.
+    let arrow(from, to, gap: 0, ..style) = {
+      let dx = to.at(0) - from.at(0)
+      let dy = to.at(1) - from.at(1)
+      let len = calc.max(calc.sqrt(dx * dx + dy * dy), 1e-6)
+      line(from, (to.at(0) - dx / len * gap, to.at(1) - dy / len * gap), ..style)
+    }
+
+    let prog(pos, body) = {
+      let (x, y) = pos
+      rect(
+        (x - 1.25, y - 0.8),
+        (x + 1.25, y + 0.8),
+        radius: .14,
+        fill: prog-fill,
+        stroke: (paint: edge, thickness: .9pt),
+      )
+      content(pos, text(size: .42em, weight: "medium", fill: ink)[#body], anchor: "center")
+    }
+
+    // ---- macro level ----
+    prog((2.15, 5.45), [Macro\ program])
+
+    // macro-abstractions: three overlapping blocks feeding the macro program
+    for (a, b) in (
+      ((5.27, 5.60), (6.24, 6.03)),
+      ((5.66, 5.22), (6.51, 5.66)),
+      ((6.29, 5.60), (7.12, 6.04)),
+    ) {
+      rect(a, b, fill: blk-fill, stroke: (paint: edge, thickness: .8pt))
+    }
+    lbl((6.20, 6.45), [Macro-abstractions])
+    arrow((5.22, 5.70), (3.40, 5.45), stroke: (paint: flow, thickness: .9pt), mark: (end: ">", scale: .6))
+
+    // macro-observables: stacked wavy sheets
+    for base in (7.30, 6.96, 6.62) {
+      let samples = 26
+      let top = range(0, samples + 1).map(i => {
+        let x = 1.45 * i / samples
+        (8.15 + x, base + 0.09 * calc.sin(250deg * x))
+      })
+      let bottom = range(0, samples + 1)
+        .rev()
+        .map(i => {
+          let x = 1.45 * i / samples
+          (8.15 + x, base - 0.24 + 0.09 * calc.sin(250deg * x))
+        })
+      line(..top, ..bottom, close: true, fill: ink.lighten(93%), stroke: (paint: edge, thickness: .8pt))
+    }
+    lbl((8.85, 7.85), [Macro-observables])
+
+    // goals: from the macro program to what the system should be observed to do
+    bezier(
+      (3.40, 6.25),
+      (8.05, 7.05),
+      (4.40, 7.50),
+      (6.66, 7.17),
+      stroke: (paint: flow, thickness: .9pt),
+      mark: (end: ">", scale: .6),
+    )
+    lbl((5.60, 7.58), [Goals])
+
+    // ---- level separator ----
+    line((-0.15, 3.75), (13.45, 3.75), stroke: (paint: ink.lighten(58%), thickness: 1pt, dash: "dotted"))
+    lbl((12.10, 5.65), [Macro-level], size: .38em, fill: ink)
+    lbl((12.10, 1.75), [Micro-level], size: .38em, fill: ink)
+
+    // ---- the two vertical block arrows across the levels ----
+    // abstractions: bottom-up, still to be built
+    line(
+      (6.01, 3.10), (6.19, 3.10), (6.19, 4.72), (6.36, 4.72), (6.10, 5.08), (5.84, 4.72), (6.01, 4.72),
+      close: true,
+      fill: ink.lighten(94%),
+      stroke: (paint: ink.lighten(40%), thickness: .9pt, dash: "dashed"),
+    )
+    lbl((5.75, 4.05), [Abstractions], anchor: "east")
+
+    // effects and emergence: bottom-up, observed
+    line(
+      (8.66, 3.10), (8.84, 3.10), (8.84, 5.80), (9.03, 5.80), (8.75, 6.18), (8.47, 5.80), (8.66, 5.80),
+      close: true,
+      fill: ink.lighten(94%),
+      stroke: (paint: ink.lighten(40%), thickness: .9pt),
+    )
+    lbl((9.30, 4.05), [Effects/emergence], anchor: "west")
+
+    // ---- micro level ----
+    prog((2.15, 1.70), [Micro\ program(s)])
+    arrow((2.15, 4.65), (2.15, 2.50), stroke: (paint: flow, thickness: .9pt), mark: (end: ">", scale: .6))
+    lbl((2.35, 3.25), [macro-to-micro], anchor: "west")
+
+    // environment
+    line(
+      (5.05, 2.95), (9.40, 2.95), (8.95, 0.40), (4.60, 0.40),
+      close: true,
+      fill: prog-fill,
+      stroke: (paint: edge, thickness: .9pt),
+    )
+    lbl((7.00, 0.10), [Environment])
+
+    let ent(kind, pos) = {
+      let (x, y) = pos
+      let style = (fill: ent-fill, stroke: (paint: ink.lighten(30%), thickness: .8pt))
+      if kind == "circle" {
+        circle(pos, radius: .22, ..style)
+      } else if kind == "triangle" {
+        line((x, y + .27), (x - .234, y - .135), (x + .234, y - .135), close: true, ..style)
+      } else {
+        line((x, y + .27), (x + .27, y), (x, y - .27), (x - .27, y), close: true, ..style)
+      }
+    }
+
+    let entities = (
+      ("triangle", (8.17, 2.60), 2.30),
+      ("circle", (5.63, 1.90), 2.00),
+      ("diamond", (6.69, 1.64), 1.75),
+      ("triangle", (7.57, 1.27), 1.50),
+      ("diamond", (8.50, 0.90), 1.25),
+      ("circle", (5.27, 0.86), 1.00),
+    )
+
+    for (kind, pos, y) in entities {
+      arrow(
+        (3.42, y),
+        pos,
+        gap: .32,
+        stroke: (paint: ink.lighten(45%), thickness: .7pt, dash: "dotted"),
+        mark: (end: ">", scale: .5),
+      )
+    }
+    for (kind, pos, _) in entities {
+      ent(kind, pos)
+    }
+  })
+]
 ]
 
-#v(.5em)
+== Macroprogramming Paradigms
+
+#text(size: .88em)[Different paradigms make the same macro-level promise, but write and deploy it differently:]
+
+#v(.4em)
 
 #block(width: 100%, inset: .25em, radius: 6pt, fill: luma(250), stroke: (paint: ink.lighten(72%), thickness: .7pt))[
   #table(
@@ -163,7 +339,7 @@
     comparison-header[Multitier],
     comparison-label[Unit of abstraction],
     comparison-cell[#text(size: .72em)[Computational field]],
-    comparison-cell[#text(size: .72em)[Global protocol]],
+    comparison-cell[#text(size: .72em)[Comm. primitives]],
     comparison-cell[#text(size: .72em)[Placed value]],
     comparison-label[Communication],
     comparison-cell[#text(size: .72em)[Implicit, neighbourhood]],
@@ -171,7 +347,7 @@
     comparison-cell[#text(size: .72em)[Implicit, cross-tier]],
     comparison-label[Participants],
     comparison-cell[#text(size: .72em)[Open, unbounded]],
-    comparison-cell[#text(size: .72em)[Fixed, known]],
+    comparison-cell[#text(size: .72em)[Fixed/open, known]],
     comparison-cell[#text(size: .72em)[Fixed tiers]],
     comparison-label[Deployment],
     comparison-cell(fill: red.lighten(93%))[#text(size: .72em)[Uniform, implicit]],
@@ -181,7 +357,7 @@
 ]
 
 #v(.25em)
-#text(size: .82em)[The three paradigms differ in how behaviour is written, but all of them settle deployment before the system starts.]
+#text(size: .82em)[The three paradigms #bold[differ in how behaviour is written], but all of them settle deployment before the system starts.]
 
 #pdfpc.speaker-note("~70s. The row that matters is the last one: all three say what the collective computes, none of them says where it runs.")
 
@@ -206,7 +382,7 @@
 
 #components.side-by-side(columns: (1.25fr, 1fr), gutter: 1em)[
   #align(center + horizon)[
-    #image("images/contribution-map.svg", width: 100%)
+    #image("images/phd_thesis_infographic.svg", width: 100%)
   ]
 ][
   #step-item("1", [Pulverization model], [Makes the logical device divisible, so its parts can be placed independently.])

@@ -40,64 +40,68 @@
   text(weight: "bold")[#content]
 }
 
+// Compact, modern callout: a flat tint with a single accent-coloured left
+// edge instead of a full border, and no separator line under the title —
+// title and body are spaced with one weak gap so it never wastes space.
 #let styled-block(
-  title, 
-  content, 
-  icon: "", 
-  fill-color: rgb("#23373b").lighten(90%),
-  stroke-color: rgb("#23373b").lighten(50%),
+  title,
+  content,
+  icon: "",
+  fill-color: rgb("#23373b").lighten(94%),
+  stroke-color: rgb("#23373b").lighten(45%),
   title-color: rgb("#000000"),
-  title-size: 20pt
-) = {
-  block(
-    width: 100%,
-    inset: (x: 24pt, y: 18pt),
-    fill: fill-color,
-    radius: 8pt,
-    stroke: (
-      paint: stroke-color, 
-      thickness: 1pt,
-      dash: "solid"
-    ),
-    [
-      #text(weight: "bold", size: title-size, fill: title-color)[#icon #title]
-      #v(-12pt)
-      #line(length: 100%, stroke: (paint: stroke-color, thickness: 1.5pt))
-      #v(-10pt)
-      #content
-    ]
-  )
-}
+  title-size: 1em,
+  body-size: .78em,
+) = block(
+  width: 100%,
+  inset: (left: 16pt, right: 16pt, top: 10pt, bottom: 11pt),
+  fill: fill-color,
+  // Round only the corners away from the accent bar: rounding all four
+  // while stroking just the left edge makes that stroke mitre into a
+  // diagonal spike at the top/bottom-left corners.
+  radius: (top-right: 5pt, bottom-right: 5pt),
+  stroke: (left: (paint: stroke-color, thickness: 2.6pt)),
+)[
+  #text(weight: "bold", size: title-size, fill: title-color)[
+    #if icon != "" {
+      icon
+    }
+    #title
+  ]
+  #v(.7em, weak: true)
+  #text(size: body-size)[#content]
+]
 
 /// Blocks
 #let feature-block(title, content, icon: "") = {
   styled-block(
-    title, 
-    content, 
+    title,
+    content,
     icon: icon,
-    fill-color: rgb("#23373b").lighten(90%),
-    stroke-color: rgb("#23373b").lighten(50%),
-    title-size: 22pt
+    fill-color: rgb("#23373b").lighten(94%),
+    stroke-color: rgb("#23373b").lighten(45%),
+    title-size: 1.1em,
+    body-size: .82em,
   )
 }
 
 #let note-block(title, content, icon: fa-info-circle() + " ") = {
   styled-block(
-    title, 
-    content, 
+    title,
+    content,
     icon: icon,
     fill-color: rgb("#fffde7"),
-    stroke-color: rgb("#ffecb3"),
+    stroke-color: rgb("#ffca28"),
   )
 }
 
 #let warning-block(title, content, icon: fa-exclamation-triangle() + " ") = {
   styled-block(
-    title, 
-    content, 
+    title,
+    content,
     icon: icon,
     fill-color: rgb("#fff3e0"),
-    stroke-color: rgb("#ffcc80"),
+    stroke-color: rgb("#fb8c00"),
     title-color: rgb("#e65100"),
   )
 }
