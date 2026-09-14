@@ -1,4 +1,5 @@
 #import "@preview/fontawesome:0.6.0": *
+#import "@preview/codly:1.3.0": codly, local as codly-local
 
 /// #mail
 ///
@@ -114,6 +115,49 @@
 #let green = rgb("#517f4a")
 #let red = rgb("#b64b4b")
 
+// Code blocks ---------------------------------------------------------------
+//
+// Touying renders every slide in its own context, so a `codly(..)` call made
+// once at the top of the document would not survive to the slides. The whole
+// configuration therefore lives here and is replayed from the theme's
+// `preamble`, which touying re-runs for each slide.
+#let codly-setup() = codly(
+  // Slides show a handful of lines, already introduced by the surrounding
+  // text: line numbers, the zebra stripes and the language tag would all be
+  // furniture the audience has no use for.
+  display-icon: false,
+  display-name: false,
+  number-format: none,
+  zebra-fill: none,
+  fill: luma(248),
+  stroke: .6pt + ink.lighten(78%),
+  radius: 10pt,
+  inset: (x: .6em, y: .25em),
+  // A snippet that splits across a slide boundary is a snippet that no longer
+  // fits, and re-indenting a wrapped line hides that from us.
+  smart-indent: false,
+  breakable: false,
+  // Highlights are the pointer: a pale tint with a thin edge, inset tightly so
+  // that marks on consecutive lines sit apart instead of touching.
+  highlight-radius: 3pt,
+  highlight-inset: (x: .25em, y: .08em),
+  highlight-outset: (x: 0pt, y: .06em),
+  highlight-fill: color => color.lighten(86%),
+  highlight-stroke: color => .7pt + color.lighten(40%),
+)
+
+/// #code
+///
+/// A code block for a slide. Every named argument other than `size` is a codly
+/// setting — `highlights`, `annotations`, `range`, ... — applied to this block
+/// alone and restored afterwards, so a snippet never inherits the highlights of
+/// the previous one and no explicit reset is needed.
+///
+/// - body (content): a raw block, normally a fenced ```` ```scala ... ``` ```` literal
+/// - size (length): size of the snippet, relative to the slide text size
+/// -> (content): the styled code block
+#let code(body, size: 1em, ..settings) = codly-local(text(size: size, body), ..settings)
+
 #let chip(body, fill: orange.lighten(85%), stroke: orange.lighten(40%)) = box(
   inset: (x: .65em, y: .32em),
   radius: 4pt,
@@ -209,26 +253,41 @@
   #chip(body, fill: ink.lighten(90%), stroke: ink.lighten(60%))
 ]
 
-/// A CeTZ node for one pulverisation component. Symbol and name sit on a single
-/// line so the label always fits inside the box.
+/// A CeTZ node for one pulverisation component: a rounded square carrying the
+/// Greek symbol, with the component name set underneath it.
 ///
 /// Must be called inside a `cetz.canvas` block, passing the `cetz.draw` module.
-#let pulv-node(draw, pos, symbol, name, color, width: 3.9, height: 0.85) = {
+#let pulv-node(draw, pos, symbol, name, color, size: 1.2) = {
   let (x, y) = pos
   draw.rect(
-    (x - width / 2, y - height / 2),
-    (x + width / 2, y + height / 2),
-    radius: .1,
+    (x - size / 2, y - size / 2),
+    (x + size / 2, y + size / 2),
+    radius: .18,
     fill: color.lighten(88%),
-    stroke: (paint: color.lighten(30%), thickness: .9pt),
+    stroke: (paint: color.darken(8%), thickness: 1.1pt),
+  )
+  draw.content(pos, text(size: .62em, weight: "medium", fill: color.darken(28%))[#symbol], anchor: "center")
+  draw.content(
+    (x, y - size / 2 - .3),
+    text(size: .34em, fill: ink.lighten(12%))[#name],
+    anchor: "center",
+  )
+}
+
+/// The dashed frame grouping a set of pulverisation components, with its label
+/// placed either above or below the group.
+#let pulv-group(draw, a, b, label, color, label-above: true) = {
+  let (x0, y0) = a
+  let (x1, y1) = b
+  draw.rect(
+    a, b,
+    radius: .15,
+    fill: color.lighten(97%),
+    stroke: (paint: color.lighten(45%), thickness: .9pt, dash: "dashed"),
   )
   draw.content(
-    pos,
-    box[
-      #text(size: .46em, weight: "medium", fill: color.darken(18%))[#symbol]
-      #h(.4em)
-      #text(size: .38em, fill: ink.lighten(10%))[#name]
-    ],
+    ((x0 + x1) / 2, if label-above { y1 + .36 } else { y0 - .36 }),
+    text(size: .4em, weight: "medium", fill: color.darken(12%))[#label],
     anchor: "center",
   )
 }

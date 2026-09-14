@@ -1,7 +1,7 @@
 #import "@preview/touying:0.6.3": *
 #import themes.metropolis: *
 #import "@preview/fontawesome:0.6.0": *
-#import "@preview/codly:1.3.0": *
+#import "@preview/codly:1.3.0": codly-init
 #import "@preview/cetz:0.4.2"
 #import "utils.typ": *
 
@@ -35,27 +35,72 @@
   ]
 ]
 
+// Section dividers double as a "you are here" map: each act shows the thesis
+// infographic with its own block at full opacity and the others dimmed. The
+// variant is picked from the heading label, so `= Title <languages>` draws
+// `images/phd_thesis_infographic_languages.svg`; a section whose label is not
+// listed here falls back to the plain, centred divider.
+#let section-infographics = (
+  "model": "images/phd_thesis_infographic_model.svg",
+  "deployment": "images/phd_thesis_infographic_deployment.svg",
+  "languages": "images/phd_thesis_infographic_languages.svg",
+  "demo": "images/phd_thesis_infographic_demo.svg",
+  "future-work": "images/phd_thesis_infographic_future_work.svg",
+)
+
+#let infographic-section-slide(config: (:), level: 1, numbered: true, body) = touying-slide-wrapper(self => {
+  let headings = self.at("headings", default: ())
+  let label = if headings != () and headings.at(-1).has("label") {
+    str(headings.at(-1).label)
+  } else {
+    ""
+  }
+  let figure-path = section-infographics.at(label, default: none)
+
+  let title = text(
+    size: 1.5em,
+    fill: self.colors.neutral-darkest,
+    utils.display-current-heading(level: level, numbered: numbered, style: auto),
+  )
+  let rule = block(
+    height: 2pt,
+    width: 100%,
+    spacing: 0pt,
+    components.progress-bar(height: 2pt, self.colors.primary, self.colors.primary-light),
+  )
+
+  self = utils.merge-dicts(self, config-page(fill: self.colors.neutral-lightest))
+  touying-slide(self: self, config: config, {
+    set std.align(horizon)
+    if figure-path == none {
+      // The stock metropolis divider, for sections without a map block.
+      show: pad.with(20%)
+      stack(dir: ttb, spacing: 1em, title, rule)
+      text(self.colors.neutral-dark, body)
+    } else {
+      show: pad.with(x: 5%, y: 3%)
+      grid(
+        columns: (.9fr, 1.45fr),
+        column-gutter: 1.4em,
+        align: horizon,
+        stack(dir: ttb, spacing: .9em, title, rule, text(self.colors.neutral-dark, body)),
+        align(center + horizon, image(figure-path, width: 100%)),
+      )
+    }
+  })
+})
+
 #show: metropolis-theme.with(
   aspect-ratio: "16-9",
   footer: self => self.info.institution,
   config-common(
     preamble: {
-      codly(
-        languages: (scala: (name: [Scala]), kotlin: (name: [Kotlin])),
-        display-icon: false,
-        display-name: false,
-        number-format: none,
-        zebra-fill: none,
-        fill: luma(248),
-        stroke: .6pt + ink.lighten(78%),
-        radius: 10pt,
-        inset: (x: .6em, y: .25em),
-        smart-indent: false,
-        breakable: false,
-      )
+      // Replayed on every slide; see `codly-setup` in utils.typ.
+      codly-setup()
       pdfpc-config
     },
     show-bibliography-as-footnote: bibliography(title: none, "bibliography.bib"),
+    new-section-slide-fn: infographic-section-slide,
   ),
   config-info(
     title: [Engineering Collective Systems in the Edge-Cloud Continuum: Models and Platform],
@@ -364,19 +409,22 @@
 == What Is Missing
 
 #components.side-by-side(columns: (1fr, 1fr, 1fr), gutter: .8em)[
-  #mini-card([From simulation to hardware], [Collective logic is validated in simulation, then mapped onto heterogeneous hardware by hand.], color: red)
+  #mini-card([The unit is indivisible], [One logical device maps to one host: sensing, state, computation and actuation move together, or not at all.], color: red)
 ][
-  #mini-card([The device is the unit], [A logical device is the smallest deployable unit: it runs on one host, or not at all.], color: red)
+  #mini-card([The mapping is fixed too early], [Uniform assumption, endpoint projection, tier annotation --- all resolve the logical-to-physical map before the system runs.], color: red)
 ][
-  #mini-card([Placement is frozen], [Fixed at design time, and no model says what a change to it preserves.], color: red)
+  #mini-card([Change has no semantics], [Containers can be moved, but no model says what a redeployment preserves: correctness is re-established case by case.], color: red)
 ]
 
-#v(.6em)
+#v(.4em)
+#text(size: .76em, fill: ink.lighten(15%))[So behaviour validated in simulation is re-implemented by hand on real hardware: the effort goes into the deployment, not the collective logic.]
+
+#v(.4em)
 #statement(fill: orange.lighten(90%))[
-  How can collective behaviour be written once, and then partitioned, placed and reconfigured while the system runs?
+  How can collective behaviour be written once, then #bold[split], #bold[placed] and #bold[relocated at run time], with a stated guarantee of what each change preserves?
 ]
 
-#pdfpc.speaker-note("~60s. The research question of the thesis: say it slowly, everything after this answers it.")
+#pdfpc.speaker-note("~60s. Three gaps, not one: granularity (the device cannot be split), binding time (the map is fixed before run time), and semantics (nothing says what a redeployment preserves). Then read the question slowly: everything after this answers it.")
 
 == Contributions
 
@@ -400,121 +448,95 @@
 // ACT II -- MAIN CONTRIBUTION (10 minutes)
 // =============================================================================
 
-= The Pulverization Model
+= The Pulverization Model <model>
 
 #pdfpc.speaker-note("Act II, 10 minutes, the core of the talk. Should end at 15:00.")
 
 == The Monolithic Device
 
-#components.side-by-side(columns: (1fr, 1fr), gutter: 1.2em)[
-  === The problem
-
-  A logical device bundles its behaviour, its state, its neighbourhood links and its physical interfaces into one unit.
-
-  #text(size: .9em)[
-    - It has to be deployed as a whole.
-    - A constrained device cannot host it, so it stays out of the collective.
-    - Offloading part of the work means rewriting the application.
+#components.side-by-side(columns: (.72fr, 1.05fr, 1.05fr), gutter: .9em)[
+  #align(center + horizon)[
+    #image("images/ac-monolithic-motivation.svg", width: 100%)
   ]
 ][
-  === The idea
+  === The problem
 
+  #text(size: .88em)[
+    A logical device bundles behaviour, state, neighbourhood links and physical interfaces into one unit.
+
+    - It has to be deployed as a whole.
+    - A constrained device cannot host it, so it stays out of the collective.
+    - The tiers above the edge stay unused.
+  ]
+][
   #feature-block("Pulverisation")[
     _Split each logical device into computationally independent components that can be deployed, and moved, separately._
   ]
 
-  The collective program stays the same; what changes is how it is partitioned and where the parts run.
+  #text(size: .88em)[The collective program stays the same; what changes is how it is partitioned and where the parts run.]
 ]
 
-#pdfpc.speaker-note("~55s. In one sentence: keep the logical structure, dissolve the physical one.")
+#pdfpc.speaker-note("~55s. The figure is the continuum from Act I with everything above the edge greyed out: that is what a monolithic deployment buys you. In one sentence: keep the logical structure, dissolve the physical one.")
 
-== Five Components
+// == Five Components
 
-#align(center)[
-  #cetz.canvas(length: 1.0cm, {
-    import cetz.draw: *
+// #align(center)[
+//   #cetz.canvas(length: 1.0cm, {
+//     import cetz.draw: *
 
-    // the logical device, before pulverisation
-    rect((-7.6, -2.3), (-3.0, 2.3), radius: .2,
-      fill: ink.lighten(96%),
-      stroke: (paint: ink.lighten(55%), thickness: 1pt, dash: "dashed"))
-    content((-5.3, 2.7), text(size: .42em, weight: "medium", fill: ink)[logical device], anchor: "center")
-    content((-5.3, 0), text(size: .8em, weight: "medium", fill: ink.lighten(30%))[monolith], anchor: "center")
+//     // --- the logical device, before pulverisation ------------------------
+//     rect((-7.3, -2.5), (-2.3, 2.5), radius: .28,
+//       fill: orange.lighten(96%),
+//       stroke: (paint: orange, thickness: 1.8pt))
+//     content((-4.8, 2.86), text(size: .44em, weight: "medium", fill: ink)[logical device], anchor: "center")
 
-    line((-2.7, 0), (-1.4, 0), stroke: (paint: orange, thickness: 1.4pt), mark: (end: ">"))
-    content((-2.05, .42), text(size: .38em, weight: "medium", fill: orange.darken(10%))[pulverise], anchor: "center")
+//     // links first, so the opaque nodes drawn later cover their endpoints
+//     for target in ((-6.1, 1.3), (-3.5, 1.3), (-6.1, -1.3), (-3.5, -1.3)) {
+//       line((-4.8, 0), target, stroke: (paint: ink.lighten(25%), thickness: 1.1pt))
+//     }
 
-    // group 1: relocatable components
-    rect((-1.2, -2.3), (3.2, 2.3), radius: .15,
-      fill: blue.lighten(97%), stroke: (paint: blue.lighten(55%), thickness: .8pt, dash: "dashed"))
-    content((1.0, 2.7), text(size: .42em, weight: "medium", fill: blue.darken(10%))[relocatable], anchor: "center")
-    pulv-node(cetz.draw, (1.0, 1.25), $beta$, "behaviour", blue)
-    pulv-node(cetz.draw, (1.0, 0.0), $sigma$, "state", green)
-    pulv-node(cetz.draw, (1.0, -1.25), $chi$, "communication", orange)
+//     pulv-node(cetz.draw, (-6.1, 1.3), $kappa$, "state", green)
+//     pulv-node(cetz.draw, (-3.5, 1.3), $chi$, "communication", orange)
+//     pulv-node(cetz.draw, (-4.8, 0), $beta$, "behaviour", blue)
+//     pulv-node(cetz.draw, (-6.1, -1.3), $sigma$, "sensors", red)
+//     pulv-node(cetz.draw, (-3.5, -1.3), $alpha$, "actuators", red)
 
-    // group 2: components pinned to the physical device
-    rect((4.2, -2.3), (8.6, 2.3), radius: .15,
-      fill: red.lighten(97%), stroke: (paint: red.lighten(55%), thickness: .8pt, dash: "dashed"))
-    content((6.4, 2.7), text(size: .42em, weight: "medium", fill: red.darken(10%))[pinned to the device], anchor: "center")
-    pulv-node(cetz.draw, (6.4, 0.62), $s$, "sensors", red)
-    pulv-node(cetz.draw, (6.4, -0.62), $a$, "actuators", red)
-  })
-]
+//     // --- the split --------------------------------------------------------
+//     line((-2.0, 0), (-0.7, 0), stroke: (paint: orange, thickness: 1.6pt), mark: (end: ">", scale: .8))
+//     content((-1.35, .45), text(size: .4em, weight: "medium", fill: orange.darken(10%))[pulverise], anchor: "center")
 
-#v(.3em)
-#statement[
-  Behaviour, state and communication can run on any host. Sensors and actuators stay on the physical device.
-]
+//     // --- what may move, and what may not ----------------------------------
+//     pulv-group(cetz.draw, (-0.3, 0.3), (5.7, 2.5), [relocatable — any host in the continuum], ink)
+//     pulv-node(cetz.draw, (1.1, 1.5), $beta$, "behaviour", blue)
+//     pulv-node(cetz.draw, (2.7, 1.5), $kappa$, "state", green)
+//     pulv-node(cetz.draw, (4.3, 1.5), $chi$, "communication", orange)
 
-#pdfpc.speaker-note("~80s. Key slide. Behaviour is the computation, state is what persists between rounds, communication handles the neighbour exchange, sensors and actuators are bound to the hardware. Only the left group can move, and that constraint is what makes placement an interesting problem.")
+//     pulv-group(cetz.draw, (-0.3, -2.5), (5.7, -0.3), [pinned to the physical device], red, label-above: false)
+//     pulv-node(cetz.draw, (1.9, -1.3), $sigma$, "sensors", red)
+//     pulv-node(cetz.draw, (3.5, -1.3), $alpha$, "actuators", red)
+//   })
+// ]
+
+// #v(.3em)
+// #statement[
+//   Behaviour, state and communication can run on any host. Sensors and actuators stay on the physical device.
+// ]
+
+// #pdfpc.speaker-note("~80s. Key slide. Left, the logical device: behaviour is the computation, state is what persists between rounds, communication handles the neighbour exchange, sensors and actuators are bound to the hardware. Right, the same five components regrouped: only the top group can move, and that constraint is what makes placement an interesting problem.")
 
 == Logical Structure and Physical Placement
 
-#components.side-by-side(columns: (1fr, 1fr), gutter: 1em)[
+#components.side-by-side(columns: (.8fr, 1.35fr), gutter: 1.2em)[
   #align(center + horizon)[
-    #cetz.canvas(length: 1cm, {
-      import cetz.draw: *
-
-      let dot(pos, color, dashed: false) = circle(
-        pos, radius: .32,
-        fill: color.lighten(85%),
-        stroke: (paint: color.lighten(30%), thickness: .9pt, dash: if dashed { "dashed" } else { "solid" }),
-      )
-
-      // logical DAG
-      content((0, 2.6), text(size: .55em, weight: "medium", fill: ink)[logical: component DAG], anchor: "center")
-      dot((0, 1.7), blue)
-      dot((-1.5, .4), green)
-      dot((1.5, .4), orange, dashed: true)
-      dot((-0.8, -1.0), red, dashed: true)
-      dot((0.9, -1.0), green)
-      for (a, b) in ((((0,1.7)), ((-1.5,.4))), (((0,1.7)), ((1.5,.4))), (((0,1.7)), ((-0.8,-1.0))), (((0,1.7)), ((0.9,-1.0))), (((-1.5,.4)), ((-0.8,-1.0))), (((1.5,.4)), ((0.9,-1.0)))) {
-        line(a, b, stroke: (paint: ink.lighten(55%), thickness: .7pt))
-      }
-    })
+    #image("images/partitioned-macro-program.svg", width: 90%)
+    #v(-.1em)
+    #text(size: .62em, fill: ink.lighten(25%))[logical: component graph]
   ]
 ][
   #align(center + horizon)[
-    #cetz.canvas(length: 1cm, {
-      import cetz.draw: *
-
-      let tier(y, label, color, h: .95) = {
-        rect((-2.6, y - h / 2), (2.6, y + h / 2), radius: .1,
-          fill: color.lighten(92%), stroke: (paint: color.lighten(40%), thickness: .8pt))
-        content((-2.0, y), text(size: .5em, weight: "medium", fill: color.darken(15%))[#label], anchor: "west")
-      }
-
-      content((0, 2.6), text(size: .55em, weight: "medium", fill: ink)[physical: continuum tiers], anchor: "center")
-      tier(1.6, "cloud", blue)
-      tier(0.2, "edge", green)
-      tier(-1.2, "device", orange)
-
-      circle((1.4, 1.6), radius: .26, fill: blue.lighten(70%), stroke: .8pt + blue)
-      circle((0.7, 0.2), radius: .26, fill: green.lighten(70%), stroke: .8pt + green)
-      circle((1.6, 0.2), radius: .26, fill: green.lighten(70%), stroke: .8pt + green)
-      circle((0.9, -1.2), radius: .26, fill: red.lighten(70%), stroke: .8pt + red)
-      circle((1.8, -1.2), radius: .26, fill: red.lighten(70%), stroke: .8pt + red)
-    })
+    #image("images/system-model.svg", width: 88%)
+    #v(-.1em)
+    #text(size: .62em, fill: ink.lighten(25%))[physical: hosts across the continuum]
   ]
 ]
 
@@ -527,32 +549,267 @@
 
 == Reconfiguration at Runtime
 
-#components.side-by-side(columns: (1fr, 1fr), gutter: 1.2em)[
+#components.side-by-side(columns: (1.1fr, .95fr, .95fr), gutter: 1em)[
+  #align(center + horizon)[
+    #image("images/offloading-surrogate.svg", width: 90%)
+  ]
+][
   === What can change
 
-  #text(size: .9em)[
+  #text(size: .85em)[
     - Which host runs behaviour or state.
     - How components are grouped into deployable units.
     - How many hosts take part.
   ]
 
-  All of it while the system is running @pulverisation2024.
+  #text(size: .85em)[All of it while the system is running @pulverisation2024.]
 ][
   === What is preserved
 
   #mini-card([Semantics], [The collective computes the same result under any valid partitioning.], color: green)
-  #v(.35em)
+  #v(.25em)
   #mini-card([Consistency], [Per-round state and neighbour exchange survive a re-placement.], color: blue)
 ]
 
-#v(.3em)
+#v(.15em)
 #statement(fill: green.lighten(90%), stroke: green)[
   Deployment can then be decided at runtime, rather than committed to at design time.
 ]
 
-#pdfpc.speaker-note("~60s. Answer the obvious objection: if computation moves around, does the program still mean the same thing? Yes, and proving that is why the model is formalised.")
+#pdfpc.speaker-note("~60s. The figure: one component of the device is executed by a surrogate host, and the device keeps a forward reference to it. Answer the obvious objection: if computation moves around, does the program still mean the same thing? Yes, and proving that is why the model is formalised.")
 
-= From Model to Deployment
+= Language Support for Collective Systems <languages>
+
+== Common Ground: Peers, Ties, Placed Values
+
+#components.side-by-side(columns: (1.2fr, 1fr), gutter: .8em)[
+#codly(highlights: (
+  (line: 1, start: 29, end: 40, fill: blue),
+  (line: 2, start: 29, end: 43, fill: blue),
+  (line: 4, start: 11, end: 25, fill: orange),
+  (line: 4, start: 29, end: 37, fill: orange),
+  (line: 7, start: 25, end: 36, fill: red),
+))
+```scala
+type Phone <: { type Tie <: Single[Edge] }
+type Edge  <: { type Tie <: Multiple[Phone] }
+
+val temp: Double on Phone = on[Phone](sense())
+
+on[Phone] { val here: Double = take(temp) }
+on[Edge]  { val there = take(temp) }
+```
+
+  #v(-.2em)
+  #block(width: 100%, inset: (x: .7em, y: .42em), radius: 5pt,
+    fill: red.lighten(93%), stroke: (paint: red.lighten(45%), thickness: .8pt))[
+    #text(size: .6em, fill: ink)[The edge holds a typed reference, not the reading: `take` outside the owning peer does not compile.]
+  ]
+][
+  #step-item("1", [Peers and ties], [The architecture is a type: which families exist, and who may talk to whom.])
+  #v(.15em)
+  #step-item("2", [Placed values], [`V on P` says where a value lives; only `P` can open it.])
+  #v(.15em)
+  #step-item("3", [Explicit movement], [A value reaches another peer only through a communication primitive.])
+]
+
+#v(.05em)
+#statement[
+  #text(size: .7em)[Both works in this part start from this substrate, inherited from multitier programming, and ask a different question of it: CaMiL, #bold[which paradigm's operations] may be used here; ScalaTropy, #bold[which shape] the exchange has.]
+]
+
+#pdfpc.speaker-note("~55s. Set the shared vocabulary once, so the next two slides do not each re-explain it. Peers and ties describe the architecture at the type level; a placed value V on P is owned by one peer family and everyone else holds only a typed reference; moving a value is always an explicit primitive. The last line is the roadmap for the section: two papers, one substrate, two different questions asked of it.")
+
+== CaMiL: Paradigms as Capabilities
+
+#components.side-by-side(columns: (1.25fr, 1fr), gutter: .8em)[
+  #code(highlights: (
+    (line: 2, start: 5, end: 38, fill: orange),
+    (line: 3, start: 5, end: 14, fill: blue),
+    (line: 5, start: 14, end: 27, fill: green),
+  ))[
+```scala
+def recomm(token: Token on Phone)(using
+    Placement, Choreography, Multitier
+) = Multitier:
+  val reqs = on[Edge] { asLocalAll(token) }
+  val auth = Choreography:
+    val ask = comm[Edge, Cloud](reqs)
+    val ok  = on[Cloud] { grant(ask) }
+    comm[Cloud, Edge](ok)
+  val recs = on[Edge] { suggest(take(auth)) }
+  on[Phone] { asLocal(recs).subscribe(show) }
+```
+]
+][
+  #mini-card([`Multitier`], [Placement across tiers; `asLocal` reads a remote placed value.], color: blue)
+  #v(.15em)
+  #mini-card([`Choreography`], [A global protocol; `comm` moves a placed value between peers.], color: green)
+  #v(.15em)
+  #mini-card([`Collective`], [Aggregate rounds over an ensemble, emitting streams of placed values.], color: orange)
+]
+
+#v(.05em)
+#statement[
+  #text(size: .7em)[A paradigm's operations are available only where its capability is in scope, and a boundary is crossed through the #bold[same placed values] as before. The three paradigms compose without giving up their own guarantees.]
+]
+
+#pdfpc.speaker-note("~70s. Joint work with St. Gallen, Weisenburger and Salvaneschi. The observation: multitier, choreographic and aggregate programming all take a global view of a distributed system, but they are used in isolation and their guarantees do not compose. CaMiL models each as a capability — a value carrying the authority to use that paradigm's operations, passed through Scala's using clauses — over one shared substrate of placement types. Read the snippet: a multitier block opens a choreography, the choreography returns a value placed on Edge, and multitier code consumes it. Two explicit paradigm crossings, both through placed values.")
+
+== CaMiL: What the Types Rule Out
+
+#components.side-by-side(columns: (1.2fr, 1fr), gutter: .8em)[
+  #code(size: .72em, highlights: ((line: 6, start: 3, end: 28, fill: red),))[
+```scala
+Choreography:
+  val msg: String on Phone = on[Phone](greet())
+  val f: (() => String) on Phone =
+    on[Phone](() => take(msg))
+  val atCloud = comm[Phone, Cloud](f)
+  on[Cloud](take(atCloud)())
+```
+]
+
+  #v(-.2em)
+  #block(width: 100%, inset: (x: .7em, y: .42em), radius: 5pt,
+    fill: red.lighten(93%), stroke: (paint: red.lighten(45%), thickness: .8pt))[
+    #text(size: .58em, fill: ink)[The function travelled, the value it captured did not: a runtime failure elsewhere, a compile-time error here.]
+  ]
+][
+  #step-item("1", [Safe boundaries], [Paradigm scopes do not interleave: crossing happens only through a placed value.])
+  #v(.12em)
+  #step-item("2", [No capability leaks], [A placed function cannot be invoked where its captured state does not live.])
+  #v(.12em)
+  #step-item("3", [No nested-placement deadlocks], [An `on[Q]` nested in `on[P]` can never block peers waiting on it.])
+]
+
+#v(.05em)
+#statement(fill: green.lighten(88%), stroke: green)[
+  #text(size: .68em)[A typed calculus with a #bold[soundness proof], 46 use cases from the literature re-implemented, and prototypes in Koka and Rust.]
+]
+
+#v(.1em)
+#align(center)[#chip[TOPLAS · under review] #h(.2em) #chip[_Capabilities to Catch 'em All_]]
+
+#pdfpc.speaker-note("~60s. Three static guarantees, all from the capability discipline plus placement types. The snippet is the leak: a closure placed on the phone captures a phone-local value, is sent to the cloud, and is called there — it would fail at runtime, and CaMiL rejects it when compiling. Then the evidence line: the core is formalised and proved sound, 46 use cases from the multitier, choreographic and aggregate literature were re-implemented, and the design was ported to Koka and Rust to show it does not depend on Scala.")
+
+== ScalaTropy: Communication Shapes as Types
+
+// The four communication shapes drawn as one-line glyphs: a sender on the
+// left, receivers on the right, one arrow per message. Distinct arrow colours
+// mean distinct payloads, which is the whole difference between isotropic and
+// anisotropic communication.
+#let shape-glyph(kind) = cetz.canvas(length: .58cm, {
+  import cetz.draw: *
+
+  let node(pos, color) = circle(pos, radius: .18, fill: color.lighten(88%), stroke: (paint: color, thickness: 1pt))
+  let msg(from, to, color) = line(
+    (from.at(0) + .22, from.at(1)),
+    (to.at(0) - .24, to.at(1)),
+    stroke: (paint: color, thickness: .9pt),
+    mark: (end: ">", scale: .38),
+  )
+
+  let ys = (.56, 0, -.56)
+  let payloads = (blue, green, red)
+
+  // A transparent frame, so all four glyphs share one bounding box and the
+  // chips underneath them sit on the same line.
+  rect((-.25, -.8), (1.95, .8), stroke: none)
+
+  if kind == "point-to-point" {
+    msg((0, 0), (1.7, 0), orange)
+    node((0, 0), green)
+    node((1.7, 0), red)
+  } else if kind == "co-anisotropic" {
+    for (y, c) in ys.zip(payloads) { msg((0, y), (1.7, 0), c) }
+    for y in ys { node((0, y), red) }
+    node((1.7, 0), green)
+  } else {
+    let colors = if kind == "isotropic" { (orange, orange, orange) } else { payloads }
+    for (y, c) in ys.zip(colors) { msg((0, 0), (1.7, y), c) }
+    node((0, 0), green)
+    for y in ys { node((1.7, y), red) }
+  }
+})
+
+#let shape-cell(kind, caption) = align(center + horizon)[
+  #shape-glyph(kind)
+  #v(-.45em)
+  #chip(kind)
+  #v(-.28em)
+  #text(size: .5em, fill: ink.lighten(28%))[#caption]
+]
+
+#v(-.3em)
+
+#components.side-by-side(columns: (.86fr, 1.32fr), gutter: .8em)[
+  #let idea-row(label, color, body, fill: luma(252)) = (
+    table.cell(fill: color.lighten(88%), inset: (x: .5em, y: .4em), align: center + horizon)[
+      #text(size: .62em, fill: color.darken(12%), weight: "medium")[#label]
+    ],
+    table.cell(fill: fill, inset: (x: .55em, y: .4em), align: left + horizon)[
+      #text(size: .62em, fill: ink)[#body]
+    ],
+  )
+
+  #block(width: 100%, inset: .2em, radius: 6pt, fill: luma(250), stroke: (paint: ink.lighten(72%), thickness: .7pt))[
+    #table(
+      columns: (1fr, 2.75fr),
+      gutter: .08em,
+      stroke: none,
+      ..idea-row([Topology], ink, [_as before_: which #bold[peer families] exist, and which #bold[ties] are admissible]),
+      ..idea-row([Placement], ink, [_as before_: where each #bold[value lives], written `V on P`], fill: soft),
+      ..idea-row([Shape], green, [#bold[new]: which flow is intended --- one-to-one, broadcast, scatter or gather]),
+    )
+  ]
+][
+  #code(size: .78em, highlights: (
+    (line: 1, start: 6, end: 11, fill: blue),
+    (line: 1, start: 30, end: 45, fill: blue),
+    (line: 2, start: 6, end: 11, fill: blue),
+    (line: 2, start: 30, end: 43, fill: blue),
+    (line: 5, start: 10, end: 23, fill: orange),
+    (line: 5, start: 28, end: 37, fill: orange),
+    (line: 7, start: 11, end: 25, fill: green),
+    (line: 8, start: 11, end: 20, fill: orange),
+    (line: 9, start: 10, end: 26, fill: green),
+  ))[
+```scala
+type Master <: { type Tie <: Multiple[Worker] }
+type Worker <: { type Tie <: Single[Master] }
+
+for
+  tasks: Task on Master <- on[Master]:
+    buildTasks()
+  work <- anisotropicComm[Master, Worker](tasks)
+  part <- on[Worker] { take(work).map(_.compute) }
+  all <- coAnisotropicComm[Worker, Master](part)
+yield all
+```
+]
+]
+
+#v(.1em)
+
+#components.side-by-side(columns: (1fr, 1fr, 1fr, 1fr), gutter: .5em)[
+  #shape-cell("point-to-point", [one sender, one receiver])
+][
+  #shape-cell("isotropic", [same payload to many])
+][
+  #shape-cell("anisotropic", [tailored payloads to many])
+][
+  #shape-cell("co-anisotropic", [many payloads to one])
+]
+
+#v(.1em)
+#statement(fill: green.lighten(88%), stroke: green)[
+  #text(size: .76em)[If it compiles, the exchange respects the declared architecture, and no peer receives a payload meant for someone else.]
+]
+
+#pdfpc.speaker-note("~70s. ScalaTropy in one slide. The first two rows are the substrate from three slides ago, so move over them fast; the third row is the contribution. The types on the right carry all three at once: the topology (ties), where values live (V on P), and the shape of each exchange. The four glyphs are the vocabulary: point-to-point, isotropic, anisotropic, co-anisotropic — the tropy in the name. Selectivity is not only an optimisation: sending each worker exactly its block is checked by the compiler, so confidentiality is structural. All of it is plain Scala types, no macros, erased at runtime.")
+
+= Deployments <deployment>
 
 == Choosing a Deployment
 
@@ -635,32 +892,7 @@
 
 #pdfpc.speaker-note("~50s. Fill this slide. Once the figures are in, quote the headline numbers from each paper.")
 
-== Languages for Placement and Coordination
-
-#components.side-by-side(columns: (1.05fr, 1fr), gutter: 1em)[
-  #step-item("A", [CaMiL / LociX], [One type-safe language covering choreographic, multitier and aggregate computing, with placement and communication as capabilities.])
-  #v(.3em)
-  #step-item("B", [ScalaTropy], [Multiparty coordination with monadic communication primitives: isotropic, anisotropic, co-anisotropic.])
-  #v(.3em)
-  #step-item("C", [LLM macroprogramming], [Natural-language intent compiled into collective programs.])
-][
-```scala
-type Pinger <: { type Tie <: Single[Ponger] }
-type Ponger <: { type Tie <: Single[Pinger] }
-
-def pingPong(using
-    Network, Choreography, PlacedValue) =
-  val ping = on[Pinger]("ping")
-  val received = comm[Pinger, Ponger](ping)
-  val pong = on[Ponger]:
-    println(received.take)
-    "pong"
-  comm[Ponger, Pinger](pong)
-```
-  #align(center)[#chip[TOPLAS · under review] #h(.2em) #chip[COORDINATION 2026]]
-]
-
-#pdfpc.speaker-note("~65s. A whole thesis part on one slide, and say so. Framing: pulverisation says where code can run, these languages say how to write it so the compiler checks the placement. Mention TOPLAS is still under review.")
+= Real-World Demonstrator <demo>
 
 == Demonstrator: Self-organising Robot Teams
 
@@ -682,151 +914,151 @@ def pingPong(using
 
 #pdfpc.speaker-note("~50s. Callback to the gap slide. End of Act II, should be at 15:00.")
 
-// =============================================================================
-// ACT III -- WRAP-UP (5 minutes)
-// =============================================================================
+// // =============================================================================
+// // ACT III -- WRAP-UP (5 minutes)
+// // =============================================================================
 
-= Status and Outlook
+// = Status and Outlook
 
-#pdfpc.speaker-note("Act III, 5 minutes. This is a progress review: be concrete about what is done and what is left.")
+// #pdfpc.speaker-note("Act III, 5 minutes. This is a progress review: be concrete about what is done and what is left.")
 
-#let status-chip(kind) = if kind == "published" {
-  chip([published], fill: green.lighten(88%), stroke: green.lighten(35%))
-} else {
-  chip([under review], fill: blue.lighten(88%), stroke: blue.lighten(38%))
-}
+// #let status-chip(kind) = if kind == "published" {
+//   chip([published], fill: green.lighten(88%), stroke: green.lighten(35%))
+// } else {
+//   chip([under review], fill: blue.lighten(88%), stroke: blue.lighten(38%))
+// }
 
-#let pub-row(work, venue, year, status, chapter) = (
-  comparison-label(inset: (x: .55em, y: .22em))[#text(size: .62em)[#work]],
-  comparison-cell(inset: (x: .4em, y: .22em))[#text(size: .62em)[#venue]],
-  comparison-cell(inset: (x: .4em, y: .22em))[#text(size: .62em)[#year]],
-  comparison-cell(inset: (x: .4em, y: .22em))[#status-chip(status)],
-  comparison-cell(inset: (x: .4em, y: .22em))[#text(size: .62em)[#chapter]],
-)
+// #let pub-row(work, venue, year, status, chapter) = (
+//   comparison-label(inset: (x: .55em, y: .22em))[#text(size: .62em)[#work]],
+//   comparison-cell(inset: (x: .4em, y: .22em))[#text(size: .62em)[#venue]],
+//   comparison-cell(inset: (x: .4em, y: .22em))[#text(size: .62em)[#year]],
+//   comparison-cell(inset: (x: .4em, y: .22em))[#status-chip(status)],
+//   comparison-cell(inset: (x: .4em, y: .22em))[#text(size: .62em)[#chapter]],
+// )
 
-== Publications
+// == Publications
 
-#timing-chip[15:00 → 20:00 · wrap-up]
+// #timing-chip[15:00 → 20:00 · wrap-up]
 
-#block(width: 100%, inset: .2em, radius: 6pt, fill: luma(250), stroke: (paint: ink.lighten(72%), thickness: .7pt))[
-  #table(
-    columns: (2.4fr, 1.3fr, .5fr, 1fr, .55fr),
-    gutter: .04em,
-    stroke: none,
-    comparison-header(inset: (x: .45em, y: .28em))[Work],
-    comparison-header(inset: (x: .45em, y: .28em))[Venue],
-    comparison-header(inset: (x: .45em, y: .28em))[Year],
-    comparison-header(inset: (x: .45em, y: .28em))[Status],
-    comparison-header(inset: (x: .45em, y: .28em))[Ch.],
+// #block(width: 100%, inset: .2em, radius: 6pt, fill: luma(250), stroke: (paint: ink.lighten(72%), thickness: .7pt))[
+//   #table(
+//     columns: (2.4fr, 1.3fr, .5fr, 1fr, .55fr),
+//     gutter: .04em,
+//     stroke: none,
+//     comparison-header(inset: (x: .45em, y: .28em))[Work],
+//     comparison-header(inset: (x: .45em, y: .28em))[Venue],
+//     comparison-header(inset: (x: .45em, y: .28em))[Year],
+//     comparison-header(inset: (x: .45em, y: .28em))[Status],
+//     comparison-header(inset: (x: .45em, y: .28em))[Ch.],
 
-    ..pub-row([Scalability through Pulverisation], [FGCS], [2024], "published", [5]),
-    ..pub-row([LLM macroprogramming for IoT], [ACM TOSEM], [2025], "published", [6]),
-    ..pub-row([Capabilities to Catch 'em All], [TOPLAS], [2026], "review", [6]),
-    ..pub-row([ScalaTropy], [COORDINATION], [2026], "published", [6]),
-    ..pub-row([Flexible Self-organisation], [ACSOS], [2024], "published", [7]),
-    ..pub-row([Dynamic IoT reconfiguration], [Internet of Things], [2024], "published", [7]),
-    ..pub-row([Green deployment planning], [COORDINATION], [2025], "published", [7]),
-    ..pub-row([Heterogeneous GNN offloading], [FGCS], [2026], "published", [8]),
-    ..pub-row([Demonstrator for robot teams], [COORDINATION], [2025], "published", [9]),
-  )
-]
+//     ..pub-row([Scalability through Pulverisation], [FGCS], [2024], "published", [5]),
+//     ..pub-row([LLM macroprogramming for IoT], [ACM TOSEM], [2025], "published", [6]),
+//     ..pub-row([Capabilities to Catch 'em All], [TOPLAS], [2026], "review", [6]),
+//     ..pub-row([ScalaTropy], [COORDINATION], [2026], "published", [6]),
+//     ..pub-row([Flexible Self-organisation], [ACSOS], [2024], "published", [7]),
+//     ..pub-row([Dynamic IoT reconfiguration], [Internet of Things], [2024], "published", [7]),
+//     ..pub-row([Green deployment planning], [COORDINATION], [2025], "published", [7]),
+//     ..pub-row([Heterogeneous GNN offloading], [FGCS], [2026], "published", [8]),
+//     ..pub-row([Demonstrator for robot teams], [COORDINATION], [2025], "published", [9]),
+//   )
+// ]
 
-#pdfpc.speaker-note("~55s. Do not read the table. Nine works, eight published or accepted, one under review at TOPLAS, and every thesis chapter has a paper behind it.")
+// #pdfpc.speaker-note("~55s. Do not read the table. Nine works, eight published or accepted, one under review at TOPLAS, and every thesis chapter has a paper behind it.")
 
-== Thesis Status and Timeline
+// == Thesis Status and Timeline
 
-#components.side-by-side(columns: (1fr, 1fr), gutter: 1.2em)[
-  #text(size: .78em)[
-    *Drafted*
-    - Part I, background: structure fixed, related work collected (Ch. 2–4).
-    - Part II, model: pulverisation chapter from FGCS 2024 (Ch. 5).
-    - Part III: deployment chapters follow the published papers (Ch. 7–8).
-  ]
-][
-  #text(size: .78em)[
-    *Left to do*
-    - Ch. 6, once TOPLAS replies: consolidate the three language papers.
-    - Ch. 9, the demonstrator, plus introduction and conclusions.
-    - Unify the notation across chapters taken from different papers.
-  ]
-]
+// #components.side-by-side(columns: (1fr, 1fr), gutter: 1.2em)[
+//   #text(size: .78em)[
+//     *Drafted*
+//     - Part I, background: structure fixed, related work collected (Ch. 2–4).
+//     - Part II, model: pulverisation chapter from FGCS 2024 (Ch. 5).
+//     - Part III: deployment chapters follow the published papers (Ch. 7–8).
+//   ]
+// ][
+//   #text(size: .78em)[
+//     *Left to do*
+//     - Ch. 6, once TOPLAS replies: consolidate the three language papers.
+//     - Ch. 9, the demonstrator, plus introduction and conclusions.
+//     - Unify the notation across chapters taken from different papers.
+//   ]
+// ]
 
-#v(.3em)
+// #v(.3em)
 
-#align(center)[
-  #cetz.canvas(length: 0.95cm, {
-    import cetz.draw: *
+// #align(center)[
+//   #cetz.canvas(length: 0.95cm, {
+//     import cetz.draw: *
 
-    line((-7.6, 0), (7.9, 0), stroke: (paint: ink.lighten(40%), thickness: 1.2pt), mark: (end: ">"))
+//     line((-7.6, 0), (7.9, 0), stroke: (paint: ink.lighten(40%), thickness: 1.2pt), mark: (end: ">"))
 
-    let milestone(x, label, detail, color, up: true) = {
-      let y = if up { 1.6 } else { -1.6 }
-      circle((x, 0), radius: .14, fill: color, stroke: none)
-      line((x, 0), (x, if up { y - .58 } else { y + .58 }),
-        stroke: (paint: color.lighten(30%), thickness: .9pt))
-      rect((x - 1.5, y - .58), (x + 1.5, y + .58), radius: .1,
-        fill: color.lighten(91%), stroke: (paint: color.lighten(40%), thickness: .8pt))
-      content((x, y), box(width: 2.6cm)[
-        #align(center)[
-          #text(size: .38em, weight: "medium", fill: color.darken(15%))[#label]
-          #linebreak()
-          #text(size: .29em, fill: ink.lighten(18%))[#detail]
-        ]
-      ], anchor: "center")
-    }
+//     let milestone(x, label, detail, color, up: true) = {
+//       let y = if up { 1.6 } else { -1.6 }
+//       circle((x, 0), radius: .14, fill: color, stroke: none)
+//       line((x, 0), (x, if up { y - .58 } else { y + .58 }),
+//         stroke: (paint: color.lighten(30%), thickness: .9pt))
+//       rect((x - 1.5, y - .58), (x + 1.5, y + .58), radius: .1,
+//         fill: color.lighten(91%), stroke: (paint: color.lighten(40%), thickness: .8pt))
+//       content((x, y), box(width: 2.6cm)[
+//         #align(center)[
+//           #text(size: .38em, weight: "medium", fill: color.darken(15%))[#label]
+//           #linebreak()
+//           #text(size: .29em, fill: ink.lighten(18%))[#detail]
+//         ]
+//       ], anchor: "center")
+//     }
 
-    milestone(-6.4, [Now], [chapters from papers], ink, up: true)
-    milestone(-3.2, [TOPLAS], [decision pending], blue, up: false)
-    milestone(0.0, [Writing], [Ch. 6, 9, intro], green, up: true)
-    milestone(3.2, [Submission], [to the reviewers], orange, up: false)
-    milestone(6.4, [Esame finale], [2026], red, up: true)
-  })
-]
+//     milestone(-6.4, [Now], [chapters from papers], ink, up: true)
+//     milestone(-3.2, [TOPLAS], [decision pending], blue, up: false)
+//     milestone(0.0, [Writing], [Ch. 6, 9, intro], green, up: true)
+//     milestone(3.2, [Submission], [to the reviewers], orange, up: false)
+//     milestone(6.4, [Esame finale], [2026], red, up: true)
+//   })
+// ]
 
-#pdfpc.speaker-note("~90s. Progress review: the committee wants to know what is left, and it will ask for dates. Check the drafting state and put real months on the timeline before presenting.")
+// #pdfpc.speaker-note("~90s. Progress review: the committee wants to know what is left, and it will ask for dates. Check the drafting state and put real months on the timeline before presenting.")
 
-== Future Directions
+// == Future Directions
 
-#components.side-by-side(columns: (1fr, 1fr), gutter: 1.2em)[
-  #feature-block("Edge-cloud deployments")[
-    #text(size: .84em)[_The dashed block on the contribution map: learned, self-organising deployment over the full continuum, at scale._]
-  ]
-][
-  #text(size: .95em)[
-    - *Learned and declarative together*: planner constraints as safety bounds on the learned policy.
-    - *Cross-fleet deployment*: heterogeneous robot fleets under one middleware.
-    - *Deployment as a language construct*, checked by the compiler.
-  ]
-]
+// #components.side-by-side(columns: (1fr, 1fr), gutter: 1.2em)[
+//   #feature-block("Edge-cloud deployments")[
+//     #text(size: .84em)[_The dashed block on the contribution map: learned, self-organising deployment over the full continuum, at scale._]
+//   ]
+// ][
+//   #text(size: .95em)[
+//     - *Learned and declarative together*: planner constraints as safety bounds on the learned policy.
+//     - *Cross-fleet deployment*: heterogeneous robot fleets under one middleware.
+//     - *Deployment as a language construct*, checked by the compiler.
+//   ]
+// ]
 
-#v(.3em)
-#statement(fill: orange.lighten(90%))[
-  The direction is systems that keep adapting their execution footprint to the context and the resources they find.
-]
+// #v(.3em)
+// #statement(fill: orange.lighten(90%))[
+//   The direction is systems that keep adapting their execution footprint to the context and the resources they find.
+// ]
 
-#pdfpc.speaker-note("~50s. Close on the last sentence, it is the one-line summary of the PhD.")
+// #pdfpc.speaker-note("~50s. Close on the last sentence, it is the one-line summary of the PhD.")
 
-#focus-slide[
-  Thank you
-  #v(.5em)
-  #text(size: .55em, weight: "light")[Questions?]
-]
+// #focus-slide[
+//   Thank you
+//   #v(.5em)
+//   #text(size: .55em, weight: "light")[Questions?]
+// ]
 
-// =============================================================================
-// BACKUP
-// =============================================================================
+// // =============================================================================
+// // BACKUP
+// // =============================================================================
 
-= Backup <touying:hidden>
+// = Backup <touying:hidden>
 
-== Pulverisation: Component Interactions <touying:hidden>
+// == Pulverisation: Component Interactions <touying:hidden>
 
-#placeholder(
-  [Round structure],
-  body: [Backup: the per-round interaction between behaviour, state and communication components.],
-)
+// #placeholder(
+//   [Round structure],
+//   body: [Backup: the per-round interaction between behaviour, state and communication components.],
+// )
 
-== Other Work During the PhD <touying:hidden>
+// == Other Work During the PhD <touying:hidden>
 
-- *Intelligent Pulverised Collective-Adaptive Systems*, ACSOS 2024 Doctoral Symposium.
-- *Decentralized proximity-aware clustering for collective self-federated learning*, Internet of Things, 2026.
-- *HarmoniKt*: unifying middleware for heterogeneous robot fleets.
+// - *Intelligent Pulverised Collective-Adaptive Systems*, ACSOS 2024 Doctoral Symposium.
+// - *Decentralized proximity-aware clustering for collective self-federated learning*, Internet of Things, 2026.
+// - *HarmoniKt*: unifying middleware for heterogeneous robot fleets.
