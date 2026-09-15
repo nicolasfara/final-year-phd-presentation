@@ -833,36 +833,33 @@ yield all
 
 #block(width: 100%, inset: .25em, radius: 6pt, fill: luma(250), stroke: (paint: ink.lighten(72%), thickness: .7pt))[
   #table(
-    columns: (.85fr, 1fr, 1fr, 1fr),
+    columns: (1.05fr, 1fr, 1fr, 1fr),
     gutter: .08em,
     stroke: none,
     comparison-header[Policy],
     comparison-header[What it is told],
     comparison-header[What it buys],
     comparison-header[What it costs],
-    comparison-label(inset: (x: .55em, y: .4em))[#chip([A], fill: blue.lighten(88%), stroke: blue.lighten(38%)) Battery rule \ #text(size: .78em, weight: "regular", fill: ink.lighten(35%))[_ACSOS 2024_]],
+    comparison-label(inset: (x: .55em, y: .4em))[#chip([A], fill: blue.lighten(88%), stroke: blue.lighten(38%)) Battery rule #cite(<flexible2024>)],
     comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[one threshold, one component: offload below 30%]],
     comparison-cell(fill: green.lighten(94%), inset: (x: .45em, y: .4em))[#text(size: .68em)[more battery left at the end of the run]],
     comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[bandwidth, not energy: extra hops to the surrogate]],
-    comparison-label(inset: (x: .55em, y: .4em))[#chip([B], fill: green.lighten(88%), stroke: green.lighten(35%)) Field regions \ #text(size: .78em, weight: "regular", fill: ink.lighten(35%))[_Internet of Things 2024_]],
+    comparison-label(inset: (x: .55em, y: .4em))[#chip([B], fill: green.lighten(88%), stroke: green.lighten(35%)) Field regions @dynamiciot2024],
     comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[leaders resize their region by their own load]],
     comparison-cell(fill: green.lighten(94%), inset: (x: .45em, y: .4em))[#text(size: .68em)[more devices offload at all; graceful failure recovery]],
     comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[a stabilisation transient; depends on the topology]],
-    comparison-label(inset: (x: .55em, y: .4em))[#chip([C], fill: orange.lighten(85%), stroke: orange.lighten(40%)) Green planner \ #text(size: .78em, weight: "regular", fill: ink.lighten(35%))[_COORDINATION 2025_]],
+    comparison-label(inset: (x: .55em, y: .4em))[#chip([C], fill: orange.lighten(85%), stroke: orange.lighten(40%)) Green planner @brogi2025green],
     comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[an energy/carbon objective, plus hard latency bounds]],
     comparison-cell(fill: green.lighten(94%), inset: (x: .45em, y: .4em))[#text(size: .68em)[#bold[a third of the energy] and carbon of peer-to-peer]],
     comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[intra-component latency; replanning every 30 min]],
   )
 ]
 
-#v(.35em)
-#statement[
-  #text(size: .78em)[All three buy a real gain at a #bold[bounded, secondary cost] --- and all three need a person to say, in advance, what a good deployment is.]
-]
-
 #pdfpc.speaker-note("~75s. The concrete results behind the previous slide, one row each. A: the two charts in the paper say where the cost lands — the offloaded devices have more battery, not less, so the price is paid in messages. B: quality of service is the share of devices that manage to offload at all; the field-based policy beats the nearest-hop baseline once its regions settle, and can dip below it during the transient. It helps more on scale-free than on lobster topologies, because removing a node from a lobster network segments it. C: joint work with Brogi and Forti in Pisa — roughly a third of the energy at every network size, and the baseline's carbon tracks the day-night sinusoid exactly because its deployment never changes. Then land the last line: that is the requirement the next slides drop.")
 
 == Learning the Placement
+
+=== Informed Deep Hetero-Graph Q-Learning (IDHGQL) 
 
 #align(center)[
   #cetz.canvas(length: 1.18cm, {
@@ -1014,72 +1011,134 @@ yield all
 
 #v(.3em)
 #statement[
-  Device class and link quality are part of the graph itself, so the policy sees the heterogeneity of the continuum instead of a flat topology.
+  Device class and link quality are part of the graph itself, so the policy sees the heterogeneity of the continuum instead of a flat topology.#cite(<farabegoli2026gnn>)
 ]
 
 #pdfpc.speaker-note("~70s. Walk left to right, then the dashed feedback arrow. The novelty is the heterogeneous graph: earlier work flattens the topology and throws away the device diversity that makes placement hard.")
 
 == Informing the Policy with Collective State
 
-#components.side-by-side(columns: (1.12fr, 1fr), gutter: .9em)[
-  === No device can see congestion
+#components.side-by-side(columns: (1fr, 1.15fr), gutter: .9em, align: top)[
+  === Two kinds of node
 
-  #text(size: .78em)[
-    - Congestion is caused #bold[by the offloading decisions themselves].
-    - It belongs to an area, not to a single device.
-    - A GNN can learn it, but it needs #bold[$O(D)$ layers] to cover a region of diameter $D$.
-  ]
-
-  #v(.25em)
-
-  #feature-block("Compute it instead of learning it")[
-    #text(size: .84em)[An #bold[aggregate program] runs on the same devices, over the same neighbourhood, and computes a #bold[density field]. Each device gets it as one extra feature before the GNN reads the graph.]
-  ]
-][
-  #mini-card([Cheap, and nothing waits], [One round costs $O(|N(d)|)$: only what the neighbours sent. The field is self-stabilising, so a late message is absorbed without a barrier.], color: blue)
-  #v(.3em)
-  #mini-card([Still decentralised], [Training uses the global graph, execution never does. At run time each device reads its own Q-values from its own head.], color: orange)
-]
-
-#v(.2em)
-#statement(fill: green.lighten(88%), stroke: green)[
-  #text(size: .72em)[The same paradigm that #bold[expresses] collective behaviour can also #bold[measure] it. The learner only has to decide what to do about congestion, not how to compute it.]
-]
-
-#pdfpc.speaker-note("~70s. Key slide of the chapter. Start from why congestion is the hard case: it is caused by the very decisions being taken, and no single device can see it. A GNN could learn it, but it would have to be deep enough to carry information across the whole crowded region, so we would pay parameters and training time for something aggregate computing already gives us for free. So we compute the density field with an aggregate program on the same devices and pass it to the network as one extra feature. The two cards answer the usual objections: what a round costs, and why nothing has to wait. Then the closing line: the same paradigm we use to write collective behaviour is what measures it.")
-
-== What the Collective Term Buys
-
-#components.side-by-side(columns: (1fr, 1fr), gutter: .8em)[
+  #v(0.5em)
   #align(center)[
-    #image("images/idhgql-density-ac.svg", width: 57%)
-    #v(-.45em)
-    #text(size: .58em, fill: ink.lighten(25%))[with the collective density field]
+    #cetz.canvas(length: 1.15cm, {
+      import cetz.draw: *
+
+      let w = 4.45       // width of a type card
+      let rh = 3.6       // its height
+      let gap = .4       // between the two cards
+      let cw = 3.6       // width of a feature chip
+      let ch = .38       // and its height
+
+      // One feature. The collective term is the accented chip: it is the only
+      // feature on the slide that the device cannot measure about itself.
+      let feat(x, y, color, label, accent: false) = {
+        rect((x, y - ch / 2), (x + cw, y + ch / 2), radius: .09,
+          fill: if accent { orange.lighten(80%) } else { color.lighten(94%) },
+          stroke: (paint: if accent { orange.lighten(30%) } else { color.lighten(52%) }, thickness: .7pt))
+        content((x + cw / 2, y), text(size: .46em, fill: ink)[#label], anchor: "center")
+      }
+
+      // A node type: glyph on top, name under it, its own feature vector stacked
+      // underneath. The two stacks have different lengths and different
+      // meanings, which is the whole point.
+      let card(x0, color, glyph, title, feats) = {
+        rect((x0, 0), (x0 + w, rh), radius: .15,
+          fill: color.lighten(97%), stroke: (paint: color.lighten(48%), thickness: .9pt))
+        glyph((x0 + w / 2, rh - .85))
+        content((x0 + w / 2, rh - 1.75), text(size: .52em, weight: "medium", fill: color.darken(18%))[#title], anchor: "center")
+        for (i, f) in feats.enumerate() {
+          feat(x0 + (w - cw) / 2, rh - 2.25 - i * (ch + .12), color, f.at(0), accent: f.at(1))
+        }
+      }
+
+      // Application devices are dots with a peer-to-peer neighbourhood hanging
+      // off them; infrastructural ones are the cloud slab and edge square of the
+      // previous slide. Same shapes as the topology drawn there.
+      let app-glyph(pos) = {
+        let (x, y) = pos
+        for n in ((x - .5, y + .42), (x + .52, y + .38), (x - .46, y - .44), (x + .5, y - .4)) {
+          line((x, y), n, stroke: (paint: blue.lighten(58%), thickness: .55pt, dash: "dashed"))
+          circle(n, radius: .09, fill: blue.lighten(72%), stroke: none)
+        }
+        circle((x, y), radius: .28, fill: blue.lighten(52%), stroke: (paint: blue.darken(10%), thickness: 1pt))
+      }
+
+      let infra-glyph(pos) = {
+        let (x, y) = pos
+        line((x, y + .2), (x, y - .18), stroke: (paint: green.lighten(50%), thickness: .6pt))
+        rect((x - .48, y + .2), (x + .48, y + .56), radius: .09,
+          fill: green.lighten(72%), stroke: (paint: green.darken(10%), thickness: .9pt))
+        rect((x - .24, y - .56), (x + .24, y - .18), radius: .05,
+          fill: green.lighten(86%), stroke: (paint: green.darken(10%), thickness: .9pt))
+      }
+
+      card(0, blue, app-glyph, [Application Device],
+        ((
+          [battery level], false,
+        ), (
+          [processor load], false,
+        ), (
+          [collective term $c_(delta,t)$], true,
+        )))
+
+      card(w + gap, green, infra-glyph, [Infrastructural Device],
+        ((
+          [price per hour], false,
+        ), (
+          [spare capacity], false,
+        ), (
+          [round-trip latency], false,
+        )))
+    })
   ]
+
+  #v(0.5em)
+  #mini-card(
+    [Density estimation via collective computation],
+    [A #bold[density field] from an aggregate program on the same devices, instead of #bold[$O(D)$ GNN layers].],
+    color: orange,
+  )
 ][
-  #align(center)[
-    #image("images/idhgql-density-no-ac.svg", width: 57%)
-    #v(-.45em)
-    #text(size: .58em, fill: ink.lighten(25%))[without it (ablation)]
+  === Collective info vs. local view
+
+  #components.side-by-side(columns: (1fr, 1fr), gutter: .5em, align: top)[
+    #align(center)[
+      #image("images/idhgql-density-ac.svg", width: 80%)
+      #v(-.5em)
+      #text(size: .54em, fill: ink.lighten(25%))[with the collective density field]
+    ]
+  ][
+    #align(center)[
+      #image("images/idhgql-density-no-ac.svg", width: 80%)
+      #v(-.5em)
+      #text(size: .54em, fill: ink.lighten(25%))[without it (ablation)]
+    ]
+  ]
+
+  #components.side-by-side(columns: (1fr, 1fr), gutter: .5em, align: top)[
+    #mini-card(
+      [With density field],
+      [Dense zones stay local, sparse regions offload, the boundary #bold[splits].],
+      color: green,
+    )
+  ][
+    #mini-card(
+      [Uniform without it],
+      [Every device converges on the #bold[same fraction], wherever it sits.],
+      color: red,
+    )
   ]
 ]
 
 #v(.15em)
-
-#components.side-by-side(columns: (1fr, 1fr, 1fr), gutter: .55em)[
-  #mini-card([Differentiated], [Dense zones stay local; sparse regions offload.], color: green)
-][
-  #mini-card([Partial at the fringe], [Boundary devices split --- what no binary rule expresses.], color: blue)
-][
-  #mini-card([Uniform without it], [Every device settles on the same fraction.], color: red)
-]
-
-#v(.2em)
 #statement(fill: green.lighten(88%), stroke: green)[
-  #text(size: .74em)[What makes the policy context-aware is #bold[not the learner and not the graph], but the collective computation feeding them. #h(.5em) #chip[FGCS 2026 · IDHGQL]]
+  #text[The #bold[collective computation] gives the policy a #bold[global view] without requiring a deep GNN, so the #bold[per-component action space] can be used to deploy partial topologies.]
 ]
 
-#pdfpc.speaker-note("~70s. The ablation is the chapter's central evidence, so give it time. Left: the trained policy is spatially differentiated, the two dense zones stay local, the sparse regions offload, and the devices at the fringe split their components. That middle group is the one to point at: partial deployments are exactly what the per-component action space was introduced to make available, and no binary offload-or-not rule can express them. Right: same learner, same heterogeneous message passing, same environment, only the density term removed, and every device settles on roughly the same partial offloading regardless of position. If asked about generalisation: the trained network was then applied unchanged while three devices walked out of a dense zone, and by t=150 they had switched to offloading on their own, following the field rather than the positions it was trained on.")
+#pdfpc.speaker-note("~100s. The slide that carries the chapter, so give it time. Left first: the two node types do not carry the same features. An application device is battery, processor load, and the collective term; an infrastructural device is price, spare capacity, latency. Different dimensions, different meanings, so there is no single input layer --- each type gets its own projection into the shared space where the per-edge-type messages are summed, and the Q-head is applied only at application devices, since servers take no decisions. Then point at the orange chip: that third feature is the one no device can measure about itself. Congestion is caused by the offloading decisions themselves and belongs to an area; a GNN could recover it, but only by being deep enough to carry it across the whole crowded region. An aggregate program computes it natively on the same devices, self-stabilising, no synchronisation barrier with the learner, so the field can be refreshed several times between decisions. Then move right, to the ablation --- same learner, same graph, same environment, one feature apart. With the field the policy is differentiated by position: dense zones stay local, sparse regions offload, and the fringe devices split their components, which is the group to point at, because partial deployments are exactly what the per-component action space was introduced to make available. Remove only the density term and every device settles on roughly the same fraction regardless of where it sits. If asked about generalisation: the trained network was applied unchanged while three devices walked out of a dense zone at t=100, and by t=150 they had switched to offloading on their own, following the field rather than the positions it was trained on. If asked about the objectives: the weighted reward moves the outcome along a battery-versus-cost curve, and single-objective settings give the extreme each one asks for. Close on the statement.")
 
 // == Evaluation
 
@@ -1106,25 +1165,87 @@ yield all
 
 = Real-World Demonstrator <demo>
 
-== Demonstrator: Self-organising Robot Teams
+== Project Emerge: Nine Robots, One Macro-program
 
-#components.side-by-side(columns: (1fr, 1fr), gutter: 1.2em)[
-  === From the model to hardware
-
-  #text(size: .92em)[
-    - A robot team running a pulverised collective program.
-    - Components placed across on-board and off-board hosts.
-    - The full path from specification to a moving swarm.
+#components.side-by-side(columns: (1fr, 1.12fr), gutter: 1.1em)[
+  #align(center + horizon)[
+    #image("images/emerge-execution-cycle.svg", width: 76%)
+    #v(-.35em)
+    #text(size: .54em, fill: ink.lighten(25%))[one round: build the network model, evaluate, dispatch, actuate]
   ]
 ][
-  #note-block("Back to the opening gap")[
-    #text(size: .82em)[The step from simulated collective logic to a physical, heterogeneous deployment is the one the talk started with, and here it is done end to end.]
+  === The setup
+
+  #text(size: .72em)[
+    - In-house chassis, an #bold[ESP32] for radio and motors --- too small for a runtime, so #bold[nothing aggregate runs on board].
+    - An overhead camera with ArUco markers reports every robot's #bold[position and orientation].
+    - One server evaluates the program #bold[once per robot], one MQTT broker carries every exchange.
   ]
-  #v(.4em)
-  #align(center)[#chip[COORDINATION 2025]]
+
+  #v(.25em)
+  #mini-card(
+    [The "pulverized" deployment],
+    [Robots are the #bold[application devices], the server their #bold[shared surrogate], the broker a #bold[pure relay].],
+    color: blue,
+  )
 ]
 
-#pdfpc.speaker-note("~50s. Callback to the gap slide. End of Act II, should be at 15:00.")
+#v(.15em)
+#statement(fill: green.lighten(88%), stroke: green)[
+  Offloading the collective program to a shared #bold[edge server], we overcome the ESP32's lack of compute power and memory, ensuring the #bold[deployment-independence] property of the model.
+]
+
+#pdfpc.speaker-note("~55s. This is the physical check on everything Act II argued in simulation: can a deployment the model admits actually be built? Nine robots, chassis printed in-house, each carrying an ESP32 that does radio and wheels and nothing else --- there is no aggregate runtime on the robot, because the microcontroller cannot host one. The figure is one round: the environment provider assembles a logical network from the physical robot states at time t, the orchestrator evaluates the collective program over it, the updater dispatches the commands, the robots move, and that is t+1. What the program emits is an intention --- rotate along this vector, move forward, hold --- not a motor setting, so a different chassis means a different updater and no change to the program. Then the blue card, which is the point of the slide and is my reading, not the paper's: the paper calls its own architecture centralised and never says pulverisation. Restated in the model, the robots are the application devices that own the behaviour, the server is the shared surrogate that executes all nine instances, and the broker is the relay hop. That is the forwarding-chain case, and it is licensed because component instances hold no state beyond their round-inputs. The sensing substitution is the sharper instance: the camera reports each robot's own position and orientation, the same quantity an onboard sensor would have read, which is exactly the uniformity hypothesis the deployment-independence theorem needs. If asked why it was built this way: ESP32s that cannot host a runtime, and wanting a public demo to be robust --- the capability mismatches offloading exists for, met without the model in hand.")
+
+== Real world testbed
+
+#components.side-by-side(columns: (1.2fr, 1fr), gutter: 1.1em)[
+  #let shot(path, caption) = align(center)[
+    #image(path, width: 82%)
+    #v(-.5em)
+    #text(size: .5em, fill: ink.lighten(25%))[#caption]
+  ]
+
+  #shot("images/emerge-selfhealing-1.jpg", [line formation reached])
+  #shot("images/emerge-selfhealing-2.jpg", [one robot displaced by hand, mid-execution])
+  #shot("images/emerge-selfhealing-3.jpg", [formation recovered, no intervention])
+][
+  === Reproducible & self-stabilising
+
+  // #text(size: .70em)[
+  //   - European Researchers' Night, #bold[2024 and 2025], indoors, untrained audience.
+  //   - Five programs --- circle, square, V, lines, point-the-leader --- #bold[swapped while running], no restart.
+  //   - A dashboard draws the invisible #bold[neighbourhood relation], whose radius visitors retune.
+  // ]
+
+  // #v(.2em)
+  #mini-card(
+    [Self-stabilisation],
+    [The formation recovers from a #bold[physical perturbation] without intervention. The formation reorganises itself when robots are #bold[displaced] or #bold[removed].],
+    color: green,
+  )
+
+  === Open source
+
+
+
+  #let repo = "https://github.com/project-emerge"
+  #align(center)[
+    #link(repo)[
+      #grid(
+        columns: (auto, auto),
+        column-gutter: .9em,
+        align: horizon,
+        image("images/github.svg", height: 1.9em),
+        image("images/open-hardware.svg", height: 2.2em),
+      )
+    ]
+    #v(.35em, weak: true)
+    #text(size: .6em, fill: ink.lighten(25%))[#link(repo)[#raw("github.com/project-emerge")]]
+  ]
+]
+
+#pdfpc.speaker-note("~55s. Ran twice as a public exhibit at the Researchers' Night, indoors, with people walking through the arena. Five programs, chosen to exercise different coordination requirements --- symmetry, alignment, leader-based coordination --- rather than to look varied, and switched over the broker while the team was running: that is what the homogeneous-loading requirement was for, and the audience sees one formation dissolve into the next without a restart. The dashboard was part of the exhibit rather than an operator tool, because the neighbourhood relation is invisible otherwise; a visitor could drag the radius and watch the formation reorganise. Now the photo strip, which is the result worth having. Simulation confirmed that an offloaded deployment converges where a monolithic one does, under mobility and interrupted movement. A physical arena admits a perturbation neither of those covers --- a hand. Formation reached, a robot picked up and put somewhere else mid-execution, formation recovered with no intervention, every time it was tried. Be honest about its status: qualitative, nothing measured, so it supports the claim that self-stabilisation survives physical embodiment and adversarial handling, and no claim about recovery time or how deployments compare. Then the orange box, unprompted, because the review will ask: the deployment here is fixed by hand and never revised, so the demonstrator exercises none of the reconfiguration or the learned offloading from Act II, and it runs one aggregate program rather than a component DAG. It is one point of the deployment space, realised on hardware --- and, because the simulator can replace robots and camera behind the same broker interface, it is the natural place to exercise the rest. End of Act II, should be at 15:00.")
 
 // // =============================================================================
 // // ACT III -- WRAP-UP (5 minutes)
