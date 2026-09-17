@@ -680,13 +680,14 @@ def recomm(token: Token on Phone)(using
 
 == CaMiL: What the Types Rule Out
 
-#components.side-by-side(columns: (1.2fr, 1fr), gutter: .8em)[
-  #codly(highlights: ((line: 6, start: 3, end: 28, fill: red),))
+#components.side-by-side(columns: (1.2fr, 1fr))[
+#codly(highlights: ((line: 7, start: 3, end: 28, fill: red),))
 ```scala
 Choreography:
   val msg: String on Phone = on[Phone](greet())
-  val f: (() => String) on Phone =
-    on[Phone](() => take(msg))
+  val f: (() => String) on Phone = on[Phone] {
+    () => take(msg)
+  }
   val atCloud = comm[Phone, Cloud](f)
   on[Cloud](take(atCloud)())
 ```
@@ -698,9 +699,8 @@ Choreography:
   #step-item("3", [No nested-placement deadlocks], [An `on[Q]` nested in `on[P]` can never block peers waiting on it.])
 ]
 
-#v(.05em)
 #statement(accent: green)[
-  #text(size: .68em)[A typed calculus with a #bold[soundness proof], 46 use cases from the literature re-implemented, and prototypes in Koka and Rust.]
+  A typed calculus with a #bold[soundness proof] regarding the placement discipline and paradigms interoperability, 46 use cases from the literature re-implemented.
 ]
 
 #pdfpc.speaker-note("~60s. Three static guarantees, all from the capability discipline plus placement types. The snippet is the leak: a closure placed on the phone captures a phone-local value, is sent to the cloud, and is called there — it would fail at runtime, and CaMiL rejects it when compiling. Then the evidence line: the core is formalised and proved sound, 46 use cases from the multitier, choreographic and aggregate literature were re-implemented, and the design was ported to Koka and Rust to show it does not depend on Scala.")
@@ -781,19 +781,18 @@ Choreography:
     (line: 1, start: 30, end: 45, fill: blue),
     (line: 2, start: 6, end: 11, fill: blue),
     (line: 2, start: 30, end: 43, fill: blue),
-    (line: 5, start: 10, end: 23, fill: orange),
-    (line: 5, start: 28, end: 37, fill: orange),
-    (line: 7, start: 11, end: 25, fill: green),
-    (line: 8, start: 11, end: 20, fill: orange),
-    (line: 9, start: 10, end: 26, fill: green),
+    (line: 4, start: 10, end: 23, fill: orange),
+    (line: 4, start: 28, end: 37, fill: orange),
+    (line: 6, start: 11, end: 25, fill: green),
+    (line: 7, start: 11, end: 20, fill: orange),
+    (line: 8, start: 10, end: 26, fill: green),
   ))[
 ```scala
 type Master <: { type Tie <: Multiple[Worker] }
 type Worker <: { type Tie <: Single[Master] }
 
 for
-  tasks: Task on Master <- on[Master]:
-    buildTasks()
+  tasks: Task on Master <- on[Master] { buildTasks() }
   work <- anisotropicComm[Master, Worker](tasks)
   part <- on[Worker] { take(work).map(_.compute) }
   all <- coAnisotropicComm[Worker, Master](part)
@@ -802,21 +801,19 @@ yield all
 ]
 ]
 
-#v(.1em)
-
 #components.side-by-side(columns: (1fr, 1fr, 1fr, 1fr), gutter: .5em)[
-  #shape-cell("point-to-point", [one sender, one receiver])
+  #shape-cell("point-to-point", [])
 ][
-  #shape-cell("isotropic", [same payload to many])
+  #shape-cell("isotropic", [])
 ][
-  #shape-cell("anisotropic", [tailored payloads to many])
+  #shape-cell("anisotropic", [])
 ][
-  #shape-cell("co-anisotropic", [many payloads to one])
+  #shape-cell("co-anisotropic", [])
 ]
 
 #v(.1em)
 #statement(accent: green)[
-  #text(size: .76em)[If it compiles, the exchange respects the declared architecture, and no peer receives a payload meant for someone else.]
+  Combines the #bold[expressiveness] of choreographic programming with the #bold[static guarantees] of placement types from Multitier programming, all in a single Scala (monadic) type system.
 ]
 
 #pdfpc.speaker-note("~70s. ScalaTropy in one slide. The first two rows are the substrate from three slides ago, so move over them fast; the third row is the contribution. The types on the right carry all three at once: the topology (ties), where values live (V on P), and the shape of each exchange. The four glyphs are the vocabulary: point-to-point, isotropic, anisotropic, co-anisotropic — the tropy in the name. Selectivity is not only an optimisation: sending each worker exactly its block is checked by the compiler, so confidentiality is structural. All of it is plain Scala types, no macros, erased at runtime.")
@@ -1021,17 +1018,16 @@ yield all
   })
 ]
 
-#v(.3em)
-#statement[
-  Device class and link quality are part of the graph itself, so the policy sees the heterogeneity of the continuum instead of a flat topology.#cite(<farabegoli2026gnn>)
-]
+
+Device class and link quality are part of the graph itself, so the policy sees the heterogeneity of the continuum instead of a flat topology.#cite(<farabegoli2026gnn>)
+
 
 #pdfpc.speaker-note("~70s. Walk left to right, then the dashed feedback arrow. The novelty is the heterogeneous graph: earlier work flattens the topology and throws away the device diversity that makes placement hard.")
 
 == Informing the Policy with Collective State
 
 #components.side-by-side(columns: (1fr, 1.15fr), gutter: .9em, align: top)[
-  === Two kinds of node
+  === Two kinds of node from pulverization
 
   #v(0.5em)
   #align(center)[
@@ -1181,20 +1177,16 @@ yield all
 
 #components.side-by-side(columns: (1fr, 1.12fr), gutter: 1.1em)[
   #align(center + horizon)[
-    #image("images/emerge-execution-cycle.svg", width: 76%)
+    #image("images/emerge-execution-cycle.svg", width: 82%)
     #v(-.35em)
     #text(size: .54em, fill: ink.lighten(25%))[one round: build the network model, evaluate, dispatch, actuate]
   ]
 ][
-  === The setup
+  // === The setup
+    - An #bold[ESP32] too small for a runtime: only #bold[sensors and actuators] and #bold[connectivity].
+    - An overhead camera reads every robot's #bold[position and orientation].
+    - #bold[Collective programs] offloaded to an edge server
 
-  #text(size: .72em)[
-    - In-house chassis, an #bold[ESP32] for radio and motors --- too small for a runtime, so #bold[nothing aggregate runs on board].
-    - An overhead camera with ArUco markers reports every robot's #bold[position and orientation].
-    - One server evaluates the program #bold[once per robot], one MQTT broker carries every exchange.
-  ]
-
-  #v(.25em)
   #mini-card(
     [The "pulverized" deployment],
     [Robots are the #bold[application devices], the server their #bold[shared surrogate], the broker a #bold[pure relay].],
@@ -1202,8 +1194,9 @@ yield all
   )
 ]
 
-#v(.15em)
-
+#warning-block("Pulverization to the rescue")[
+Without a partitioning model such as the pulverization, on thiny devices the collective program would have to be #bold[deployed monolithically] on each robot, which is impossible on the ESP32.
+]
 
 #pdfpc.speaker-note("~55s. This is the physical check on everything Act II argued in simulation: can a deployment the model admits actually be built? Nine robots, chassis printed in-house, each carrying an ESP32 that does radio and wheels and nothing else --- there is no aggregate runtime on the robot, because the microcontroller cannot host one. The figure is one round: the environment provider assembles a logical network from the physical robot states at time t, the orchestrator evaluates the collective program over it, the updater dispatches the commands, the robots move, and that is t+1. What the program emits is an intention --- rotate along this vector, move forward, hold --- not a motor setting, so a different chassis means a different updater and no change to the program. Then the blue card, which is the point of the slide and is my reading, not the paper's: the paper calls its own architecture centralised and never says pulverisation. Restated in the model, the robots are the application devices that own the behaviour, the server is the shared surrogate that executes all nine instances, and the broker is the relay hop. That is the forwarding-chain case, and it is licensed because component instances hold no state beyond their round-inputs. The sensing substitution is the sharper instance: the camera reports each robot's own position and orientation, the same quantity an onboard sensor would have read, which is exactly the uniformity hypothesis the deployment-independence theorem needs. If asked why it was built this way: ESP32s that cannot host a runtime, and wanting a public demo to be robust --- the capability mismatches offloading exists for, met without the model in hand.")
 
