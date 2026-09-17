@@ -811,47 +811,47 @@ yield all
 
 = Deployments <deployment>
 
-== Choosing a Deployment
+// == Choosing a Deployment
 
-#components.side-by-side(columns: (1.1fr, 1fr), gutter: 1em)[
-  #step-item("A", [Self-organising rules], [Each device decides where its own components go @flexible2024 @dynamiciot2024.])
-  #v(.25em)
-  #step-item("B", [Constraint-based planning], [A planner searches the placement space under hardware, network and energy constraints.])
-  #v(.25em)
-  #step-item("C", [Learned policies], [An agent trained to pick placements from the topology.])
-][
-  #mini-card([Rules], [Cheap and local, but hand-written.], color: blue)
-  #v(.25em)
-  #mini-card([Planning], [Meets the declared constraints, needs a global view.], color: green)
-  #v(.25em)
-  #mini-card([Learning], [Needs training, transfers to unseen topologies.], color: orange)
-]
+// #components.side-by-side(columns: (1.1fr, 1fr), gutter: 1em)[
+//   #step-item("A", [Self-organising rules], [Each device decides where its own components go @flexible2024 @dynamiciot2024.])
+//   #v(.25em)
+//   #step-item("B", [Constraint-based planning], [A planner searches the placement space under hardware, network and energy constraints.])
+//   #v(.25em)
+//   #step-item("C", [Learned policies], [An agent trained to pick placements from the topology.])
+// ][
+//   #mini-card([Rules], [Cheap and local, but hand-written.], color: blue)
+//   #v(.25em)
+//   #mini-card([Planning], [Meets the declared constraints, needs a global view.], color: green)
+//   #v(.25em)
+//   #mini-card([Learning], [Needs training, transfers to unseen topologies.], color: orange)
+// ]
 
-#pdfpc.speaker-note("~80s. Three papers on one slide. The point to make out loud: deployment control is itself a collective behaviour, so the same tools apply to it. Green planning is joint work with Brogi and Forti in Pisa.")
+// #pdfpc.speaker-note("~80s. Three papers on one slide. The point to make out loud: deployment control is itself a collective behaviour, so the same tools apply to it. Green planning is joint work with Brogi and Forti in Pisa.")
 
-== Hand-written Policies, Measured
+== Different Deployment Strategies
 
 #block(width: 100%, inset: .25em, radius: 6pt, fill: luma(250), stroke: (paint: ink.lighten(72%), thickness: .7pt))[
   #table(
-    columns: (1.05fr, 1fr, 1fr, 1fr),
+    columns: (1.0fr, 1fr, 1fr, 1fr),
     gutter: .08em,
     stroke: none,
     comparison-header[Policy],
     comparison-header[What it is told],
     comparison-header[What it buys],
     comparison-header[What it costs],
-    comparison-label(inset: (x: .55em, y: .4em))[#chip([A], fill: blue.lighten(88%), stroke: blue.lighten(38%)) Battery rule #cite(<flexible2024>)],
-    comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[one threshold, one component: offload below 30%]],
-    comparison-cell(fill: green.lighten(94%), inset: (x: .45em, y: .4em))[#text(size: .68em)[more battery left at the end of the run]],
-    comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[bandwidth, not energy: extra hops to the surrogate]],
+    comparison-label(inset: (x: .55em, y: .4em))[#chip([A], fill: blue.lighten(88%), stroke: blue.lighten(38%)) Local rule #cite(<flexible2024>)],
+    comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[offload when below a given battery threshold]],
+    comparison-cell(fill: green.lighten(94%), inset: (x: .45em, y: .4em))[#text(size: .68em)[#bold[extended battery life] compared to baseline]],
+    comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[latency: extra hops to the surrogate]],
     comparison-label(inset: (x: .55em, y: .4em))[#chip([B], fill: green.lighten(88%), stroke: green.lighten(35%)) Field regions @dynamiciot2024],
-    comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[leaders resize their region by their own load]],
-    comparison-cell(fill: green.lighten(94%), inset: (x: .45em, y: .4em))[#text(size: .68em)[more devices offload at all; graceful failure recovery]],
-    comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[a stabilisation transient; depends on the topology]],
-    comparison-label(inset: (x: .55em, y: .4em))[#chip([C], fill: orange.lighten(85%), stroke: orange.lighten(40%)) Green planner @brogi2025green],
-    comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[an energy/carbon objective, plus hard latency bounds]],
-    comparison-cell(fill: green.lighten(94%), inset: (x: .45em, y: .4em))[#text(size: .68em)[#bold[a third of the energy] and carbon of peer-to-peer]],
-    comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[intra-component latency; replanning every 30 min]],
+    comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[leaders resize their region to match their own load]],
+    comparison-cell(fill: green.lighten(94%), inset: (x: .45em, y: .4em))[#text(size: .68em)[#bold[spatially-aware] offloading, and #bold[failure tolerant]]],
+    comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[a stabilisation transient depending on the topology]],
+    comparison-label(inset: (x: .55em, y: .4em))[#chip([C], fill: orange.lighten(85%), stroke: orange.lighten(40%)) Prolog planner @brogi2025green],
+    comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[an energy/carbon objective with latency bounds]],
+    comparison-cell(fill: green.lighten(94%), inset: (x: .45em, y: .4em))[#text(size: .68em)[#bold[a third of the energy] and #bold[carbon] consumption]],
+    comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[sub-optimal performance; a replan every 30 min]],
   )
 ]
 
@@ -1122,7 +1122,7 @@ yield all
     #mini-card(
       [With density field],
       [Dense zones stay local, sparse regions offload, the boundary #bold[splits].],
-      color: green,
+      color: blue,
     )
   ][
     #mini-card(
@@ -1191,9 +1191,7 @@ yield all
 ]
 
 #v(.15em)
-#statement(fill: green.lighten(88%), stroke: green)[
-  Offloading the collective program to a shared #bold[edge server], we overcome the ESP32's lack of compute power and memory, ensuring the #bold[deployment-independence] property of the model.
-]
+
 
 #pdfpc.speaker-note("~55s. This is the physical check on everything Act II argued in simulation: can a deployment the model admits actually be built? Nine robots, chassis printed in-house, each carrying an ESP32 that does radio and wheels and nothing else --- there is no aggregate runtime on the robot, because the microcontroller cannot host one. The figure is one round: the environment provider assembles a logical network from the physical robot states at time t, the orchestrator evaluates the collective program over it, the updater dispatches the commands, the robots move, and that is t+1. What the program emits is an intention --- rotate along this vector, move forward, hold --- not a motor setting, so a different chassis means a different updater and no change to the program. Then the blue card, which is the point of the slide and is my reading, not the paper's: the paper calls its own architecture centralised and never says pulverisation. Restated in the model, the robots are the application devices that own the behaviour, the server is the shared surrogate that executes all nine instances, and the broker is the relay hop. That is the forwarding-chain case, and it is licensed because component instances hold no state beyond their round-inputs. The sensing substitution is the sharper instance: the camera reports each robot's own position and orientation, the same quantity an onboard sensor would have read, which is exactly the uniformity hypothesis the deployment-independence theorem needs. If asked why it was built this way: ESP32s that cannot host a runtime, and wanting a public demo to be robust --- the capability mismatches offloading exists for, met without the model in hand.")
 
@@ -1201,48 +1199,52 @@ yield all
 
 #components.side-by-side(columns: (1.2fr, 1fr), gutter: 1.1em)[
   #let shot(path, caption) = align(center)[
-    #image(path, width: 82%)
-    #v(-.5em)
+    #image(path, width: 65%)
+    #v(-0.8em)
     #text(size: .5em, fill: ink.lighten(25%))[#caption]
   ]
 
   #shot("images/emerge-selfhealing-1.jpg", [line formation reached])
   #shot("images/emerge-selfhealing-2.jpg", [one robot displaced by hand, mid-execution])
   #shot("images/emerge-selfhealing-3.jpg", [formation recovered, no intervention])
+  
 ][
-  === Reproducible & self-stabilising
+  // === Reproducible & self-stabilising
 
-  // #text(size: .70em)[
-  //   - European Researchers' Night, #bold[2024 and 2025], indoors, untrained audience.
-  //   - Five programs --- circle, square, V, lines, point-the-leader --- #bold[swapped while running], no restart.
-  //   - A dashboard draws the invisible #bold[neighbourhood relation], whose radius visitors retune.
-  // ]
+  // #mini-card(
+  //   [Self-stabilisation],
+  //   [The formation recovers from a #bold[physical perturbation] without intervention. The formation reorganises itself when robots are #bold[displaced] or #bold[removed].],
+  //   color: green,
+  // )
 
-  // #v(.2em)
-  #mini-card(
-    [Self-stabilisation],
-    [The formation recovers from a #bold[physical perturbation] without intervention. The formation reorganises itself when robots are #bold[displaced] or #bold[removed].],
-    color: green,
-  )
-
-  === Open source
-
-
-
+  === Low-cost and open source
   #let repo = "https://github.com/project-emerge"
+  #block(height: 65%)[
+  #grid(
+    columns: (1fr, 60%),
+    column-gutter: .6em,
+    align: horizon,
+    link(repo)[
+      #align(center)[
+        #stack(
+          spacing: .8em,
+          image("images/github.svg", height: 4em),
+          image("images/open-hardware.svg", height: 4em),
+        )
+      ]
+    ],
+    image("images/dropbot_chassis_v2_2026_Sep_15_05_06_11PM_000_CustomizedView47537546704.png", width: 100%),
+  )
+  #v(1fr)
   #align(center)[
-    #link(repo)[
-      #grid(
-        columns: (auto, auto),
-        column-gutter: .9em,
-        align: horizon,
-        image("images/github.svg", height: 1.9em),
-        image("images/open-hardware.svg", height: 2.2em),
-      )
-    ]
-    #v(.35em, weak: true)
     #text(size: .6em, fill: ink.lighten(25%))[#link(repo)[#raw("github.com/project-emerge")]]
   ]
+  ]
+]
+
+#statement(fill: green.lighten(88%), stroke: green)[
+  // Offloading the collective program to a shared #bold[edge server], we overcome the ESP32's lack of compute power and memory, ensuring the #bold[deployment-independence] property of the model.
+  We achieved a #bold[pulverized deployment] with almost computationallyless robots, preserving the #bold[deployment-independence] property of the model.
 ]
 
 #pdfpc.speaker-note("~55s. Ran twice as a public exhibit at the Researchers' Night, indoors, with people walking through the arena. Five programs, chosen to exercise different coordination requirements --- symmetry, alignment, leader-based coordination --- rather than to look varied, and switched over the broker while the team was running: that is what the homogeneous-loading requirement was for, and the audience sees one formation dissolve into the next without a restart. The dashboard was part of the exhibit rather than an operator tool, because the neighbourhood relation is invisible otherwise; a visitor could drag the radius and watch the formation reorganise. Now the photo strip, which is the result worth having. Simulation confirmed that an offloaded deployment converges where a monolithic one does, under mobility and interrupted movement. A physical arena admits a perturbation neither of those covers --- a hand. Formation reached, a robot picked up and put somewhere else mid-execution, formation recovered with no intervention, every time it was tried. Be honest about its status: qualitative, nothing measured, so it supports the claim that self-stabilisation survives physical embodiment and adversarial handling, and no claim about recovery time or how deployments compare. Then the orange box, unprompted, because the review will ask: the deployment here is fixed by hand and never revised, so the demonstrator exercises none of the reconfiguration or the learned offloading from Act II, and it runs one aggregate program rather than a component DAG. It is one point of the deployment space, realised on hardware --- and, because the simulator can replace robots and camera behind the same broker interface, it is the natural place to exercise the rest. End of Act II, should be at 15:00.")
