@@ -369,9 +369,7 @@
 
 == Macroprogramming Paradigms
 
-#text(size: .88em)[Different paradigms make the same macro-level promise, but write and deploy it differently:]
-
-#v(.4em)
+Different paradigms make the same macro-level promise, but write and deploy it differently:
 
 #block(width: 100%, inset: .25em, radius: 6pt, fill: luma(250), stroke: (paint: ink.lighten(72%), thickness: .7pt))[
   #table(
@@ -401,30 +399,38 @@
   )
 ]
 
-#v(.25em)
-#text(size: .82em)[The three paradigms #bold[differ in how behaviour is written], but all of them settle deployment before the system starts.]
+The three paradigms #bold[differ in how behaviour is written], are used #bold[in isolation], and all of them settle deployment before the system starts.
 
-#pdfpc.speaker-note("~70s. The row that matters is the last one: all three say what the collective computes, none of them says where it runs.")
+#pdfpc.speaker-note("~70s. The row that matters is the last one: all three say what the collective computes, none of them says where it runs. And the columns never meet: each paradigm is used on its own, so its guarantees stop at its own border.")
 
-== What Is Missing
+== Research Gap
 
 #components.side-by-side(columns: (1fr, 1fr, 1fr), gutter: .8em)[
-  #mini-card([The unit is indivisible], [One logical device maps to one host: sensing, state, computation and actuation move together, or not at all.], color: red)
+  #gap-card(
+    [Monolithic devices],
+    // [A device is deployed #bold[all at once]: behaviour, state and interfaces cannot be split across machines.]
+    [Typical CAS deployments are #bold[monolithic]: the device is the unit of deployment, few approaches exploit the continuum]
+  )
 ][
-  #mini-card([The mapping is fixed too early], [Uniform assumption, endpoint projection, tier annotation --- all resolve the logical-to-physical map before the system runs.], color: red)
+  #gap-card(
+    [Isolated paradigms],
+    // [Each paradigm works #bold[on its own]: placement and interaction stay outside the language, so guarantees do not add up.]
+    [Macroprogramming paradigms are developed #bold[in isolation]: each can cover a part of the system, but integration unexplored.]
+  )
 ][
-  #mini-card([Change has no semantics], [Containers can be moved, but no model says what a redeployment preserves: correctness is re-established case by case.], color: red)
+  #gap-card(
+    [ECC deployments],
+    [Deployments typically relies only on #bold[edge devices]: when the ecc comes to play, no guarantees on self-organization are given.]
+  )
 ]
 
-#v(.4em)
-#text(size: .76em, fill: ink.lighten(15%))[So behaviour validated in simulation is re-implemented by hand on real hardware: the effort goes into the deployment, not the collective logic.]
+// #text(size: .76em, fill: ink.lighten(15%))[Consequence: behaviour verified in simulation is re-implemented and re-validated per deployment.]
 
-#v(.4em)
 #statement[
-  How can collective behaviour be written once, then #bold[split], #bold[placed] and #bold[relocated at run time], with a stated guarantee of what each change preserves?
+  Can collective behaviour be #bold[partitioned] into independently deployable parts, #bold[written and checked] in a language that knows where they run, and #bold[placed and relocated at run time] under a semantics of what each change preserves?
 ]
 
-#pdfpc.speaker-note("~60s. Three gaps, not one: granularity (the device cannot be split), binding time (the map is fixed before run time), and semantics (nothing says what a redeployment preserves). Then read the question slowly: everything after this answers it.")
+#pdfpc.speaker-note("~60s. Three gaps, one per act of the talk. Monolithic devices: the device is the unit of deployment, so pulverisation is the answer — act two. Isolated paradigms: each takes a global view but on its own, and placement and communication are outside the language, so nothing can be checked — that is the language act. Static deployment: the mapping is settled before the system starts and nothing says what a redeployment preserves — that is the deployment act. Then read the research question slowly: the three clauses are the three acts, in order.")
 
 == Contributions
 
@@ -435,14 +441,14 @@
 ][
   #step-item("1", [Pulverization model], [Makes the logical device divisible, so its parts can be placed independently.])
   #v(.35em)
-  #step-item("2", [Dynamic deployments], [Self-organising reconfiguration, constraint-based planning, learned offloading.])
+  #step-item("2", [Language support], [Placement and communication in the type system, so paradigms compose.])
   #v(.35em)
-  #step-item("3", [Language support], [Type-safe coordination and LLM-assisted macroprogramming.])
+  #step-item("3", [Dynamic deployments], [Self-organising rules, constraint-based planning, learned offloading.])
   #v(.35em)
   #step-item("4", [Demonstrator], [The model running on real robot hardware.])
 ]
 
-#pdfpc.speaker-note("~60s. Roadmap: name the four blocks, then say the next ten minutes are mostly blocks 1 and 2. End of Act I, should be at 05:00.")
+#pdfpc.speaker-note("~60s. Roadmap: the first three blocks answer the three gaps in the same order — model, languages, deployments — and the fourth shows the whole thing on real hardware. End of Act I, should be at 05:00.")
 
 // =============================================================================
 // ACT II -- MAIN CONTRIBUTION (10 minutes)

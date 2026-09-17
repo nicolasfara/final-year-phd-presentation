@@ -194,6 +194,24 @@
   #text(size: .7em, fill: ink)[#body]
 ]
 
+// A gap is an absence, so it is drawn as a hole rather than as one more panel:
+// no tint, a dashed accent outline and a muted body, against the solid fill of
+// `mini-card`. The title keeps the accent and a leading cross, so the three
+// still scan as one group and each one reads as something that is missing.
+#let gap-card(title, body, color: red) = block(
+  width: 100%,
+  inset: (x: .78em, y: .66em),
+  radius: 5pt,
+  fill: none,
+  stroke: (paint: color.lighten(38%), thickness: .8pt, dash: "dashed"),
+)[
+  #text(size: 1em, weight: "medium", fill: color.darken(8%))[
+    #box(baseline: .06em)[#text(size: .9em)[#sym.times]]~#title
+  ]
+  #v(.12em)
+  #text(size: .75em, fill: ink.lighten(22%))[#body]
+]
+
 #let placeholder(title, body: [drop-in figure], height: 63%) = block(
   width: 100%,
   height: height,
