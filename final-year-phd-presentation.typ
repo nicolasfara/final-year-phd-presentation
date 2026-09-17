@@ -582,7 +582,7 @@
 
 == Common Ground: Peers, Ties, Placed Values
 
-#components.side-by-side(columns: (1.2fr, 1fr), gutter: .8em)[
+#components.side-by-side(columns: (1.2fr, 1fr))[
 #codly(highlights: (
   (line: 1, start: 29, end: 40, fill: blue),
   (line: 2, start: 29, end: 43, fill: blue),
@@ -596,11 +596,9 @@ type Edge  <: { type Tie <: Multiple[Phone] }
 
 val temp: Double on Phone = on[Phone](sense())
 
-on[Phone] { val here: Double = take(temp) }
+on[Phone] { val here = take(temp) }
 on[Edge]  { val there = take(temp) }
 ```
-
-  #v(-.2em)
   #block(width: 100%, inset: (x: .7em, y: .42em), radius: 5pt,
     fill: red.lighten(93%), stroke: (paint: red.lighten(45%), thickness: .8pt))[
     #text(size: .6em, fill: ink)[The edge holds a typed reference, not the reading: `take` outside the owning peer does not compile.]
@@ -651,7 +649,7 @@ def recomm(token: Token on Phone)(using
 
 #v(.05em)
 #statement[
-  #text(size: .7em)[A paradigm's operations are available only where its capability is in scope, and a boundary is crossed through the #bold[same placed values] as before. The three paradigms compose without giving up their own guarantees.]
+  #text[A paradigm's operations are available only where its capability is in scope, and a boundary is crossed through the #bold[same placed values] as before. The three paradigms compose without giving up their own guarantees.]
 ]
 
 #pdfpc.speaker-note("~70s. Joint work with St. Gallen, Weisenburger and Salvaneschi. The observation: multitier, choreographic and aggregate programming all take a global view of a distributed system, but they are used in isolation and their guarantees do not compose. CaMiL models each as a capability — a value carrying the authority to use that paradigm's operations, passed through Scala's using clauses — over one shared substrate of placement types. Read the snippet: a multitier block opens a choreography, the choreography returns a value placed on Edge, and multitier code consumes it. Two explicit paradigm crossings, both through placed values.")
@@ -659,7 +657,7 @@ def recomm(token: Token on Phone)(using
 == CaMiL: What the Types Rule Out
 
 #components.side-by-side(columns: (1.2fr, 1fr), gutter: .8em)[
-  #code(size: .72em, highlights: ((line: 6, start: 3, end: 28, fill: red),))[
+  #codly(highlights: ((line: 6, start: 3, end: 28, fill: red),))
 ```scala
 Choreography:
   val msg: String on Phone = on[Phone](greet())
@@ -668,13 +666,6 @@ Choreography:
   val atCloud = comm[Phone, Cloud](f)
   on[Cloud](take(atCloud)())
 ```
-]
-
-  #v(-.2em)
-  #block(width: 100%, inset: (x: .7em, y: .42em), radius: 5pt,
-    fill: red.lighten(93%), stroke: (paint: red.lighten(45%), thickness: .8pt))[
-    #text(size: .58em, fill: ink)[The function travelled, the value it captured did not: a runtime failure elsewhere, a compile-time error here.]
-  ]
 ][
   #step-item("1", [Safe boundaries], [Paradigm scopes do not interleave: crossing happens only through a placed value.])
   #v(.12em)
@@ -687,9 +678,6 @@ Choreography:
 #statement(fill: green.lighten(88%), stroke: green)[
   #text(size: .68em)[A typed calculus with a #bold[soundness proof], 46 use cases from the literature re-implemented, and prototypes in Koka and Rust.]
 ]
-
-#v(.1em)
-#align(center)[#chip[TOPLAS · under review] #h(.2em) #chip[_Capabilities to Catch 'em All_]]
 
 #pdfpc.speaker-note("~60s. Three static guarantees, all from the capability discipline plus placement types. The snippet is the leak: a closure placed on the phone captures a phone-local value, is sent to the cloud, and is called there — it would fail at runtime, and CaMiL rejects it when compiling. Then the evidence line: the core is formalised and proved sound, 46 use cases from the multitier, choreographic and aggregate literature were re-implemented, and the design was ported to Koka and Rust to show it does not depend on Scala.")
 
@@ -758,8 +746,8 @@ Choreography:
       columns: (1fr, 2.75fr),
       gutter: .08em,
       stroke: none,
-      ..idea-row([Topology], ink, [_as before_: which #bold[peer families] exist, and which #bold[ties] are admissible]),
-      ..idea-row([Placement], ink, [_as before_: where each #bold[value lives], written `V on P`], fill: soft),
+      ..idea-row([Topology], blue, [_as before_: which #bold[peer families] exist, and which #bold[ties] are admissible]),
+      ..idea-row([Placement], orange, [_as before_: where each #bold[value lives], written `V on P`], fill: soft),
       ..idea-row([Shape], green, [#bold[new]: which flow is intended --- one-to-one, broadcast, scatter or gather]),
     )
   ]
