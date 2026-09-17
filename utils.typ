@@ -166,12 +166,18 @@
   text(size: .72em, weight: "medium", fill: ink)[#body],
 )
 
-#let statement(body, fill: soft, stroke: orange) = block(
+// The take-away: the sentence a slide is meant to leave behind. Every other
+// panel --- callout, mini-card, chip --- is a pale tint held by a thin outline
+// or a left edge, so this one carries no outline at all and is capped by a
+// solid accent rule instead, which reads as a banner rather than one more box.
+// Only the corners away from that rule are rounded: rounding all four would
+// make the cap mitre into diagonal spikes at the top.
+#let statement(body, accent: orange) = block(
   width: 100%,
-  inset: (x: .95em, y: .65em),
-  radius: 5pt,
-  fill: fill,
-  stroke: (paint: stroke.lighten(35%), thickness: .8pt),
+  inset: (x: .95em, top: .6em, bottom: .7em),
+  radius: (bottom-left: 5pt, bottom-right: 5pt),
+  fill: accent.lighten(88%),
+  stroke: (top: (paint: accent, thickness: 3pt)),
 )[
   #text(size: .92em, weight: "medium", fill: ink)[#body]
 ]
@@ -202,14 +208,25 @@
   ],
 )
 
-#let step-item(n, label, body) = block(width: 100%)[
+// `accent` ties the item to a code highlight of the same colour: the chip and
+// the label pick it up, the explanation stays in ink so the tint stays a cue
+// rather than a second voice. Without it the item is neutral, as before.
+#let step-item(n, label, body, accent: none) = block(width: 100%)[
   #grid(
     columns: (auto, 1fr),
     column-gutter: .45em,
     row-gutter: .5em,
     align: (center + horizon, left + horizon),
-    chip(n, fill: ink.lighten(88%), stroke: ink.lighten(58%)),
-    text(size: 0.95em, weight: "medium", fill: ink)[#label],
+    if accent == none {
+      chip(n, fill: ink.lighten(88%), stroke: ink.lighten(58%))
+    } else {
+      chip(n, fill: accent.lighten(85%), stroke: accent.lighten(40%))
+    },
+    text(
+      size: 0.95em,
+      weight: "medium",
+      fill: if accent == none { ink } else { accent.darken(25%) },
+    )[#label],
     [],
     text(size: .8em, fill: ink.lighten(12%))[#body],
   )

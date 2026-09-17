@@ -149,26 +149,6 @@
 
 #pdfpc.speaker-note("Act I, 5 minutes. Context, not contribution: keep it moving and be out of this part at 05:00.")
 
-== The Edge-Cloud Continuum
-
-#components.side-by-side(columns: (1.15fr, 1fr), gutter: 1em)[
-  #feature-block("The continuum")[
-    _Devices, edge, fog and cloud treated as one pool of computational resources, with no fixed boundary between tiers._ #cite(<moreschini2022continuum>)
-  ]
-
-  #text(size: .88em)[
-    - Hardware spans microcontrollers to datacentre
-    - Nodes join, leave and fail while the system runs
-    - Network partitions happen regularly
-  ]
-][
-  #align(center + horizon)[
-    #image("images/edge-cloud-continuum.svg", height: 80%)
-  ]
-]
-
-#pdfpc.speaker-note("~60s. What matters for the rest of the talk: heterogeneity and volatility are what make a fixed deployment hard to keep working.")
-
 == Collective Adaptive Systems
 
 #components.side-by-side(columns: (1fr, 1fr), gutter: 1.2em)[
@@ -196,6 +176,26 @@
 ]
 
 #pdfpc.speaker-note("~45s. Bridge slide: these systems are the workload, the continuum is the substrate. The talk is about the mismatch between the two.")
+
+== The Edge-Cloud Continuum
+
+#components.side-by-side(columns: (1.15fr, 1fr), gutter: 1em)[
+  #feature-block("The continuum")[
+    _Devices, edge, fog and cloud treated as one pool of computational resources, with no fixed boundary between tiers._ #cite(<moreschini2022continuum>)
+  ]
+
+  #text(size: .88em)[
+    - Hardware spans microcontrollers to datacentre
+    - Nodes join, leave and fail while the system runs
+    - Network partitions happen regularly
+  ]
+][
+  #align(center + horizon)[
+    #image("images/edge-cloud-continuum.svg", height: 80%)
+  ]
+]
+
+#pdfpc.speaker-note("~60s. What matters for the rest of the talk: heterogeneity and volatility are what make a fixed deployment hard to keep working.")
 
 == Macroprogramming
 
@@ -420,7 +420,7 @@
 #text(size: .76em, fill: ink.lighten(15%))[So behaviour validated in simulation is re-implemented by hand on real hardware: the effort goes into the deployment, not the collective logic.]
 
 #v(.4em)
-#statement(fill: orange.lighten(90%))[
+#statement[
   How can collective behaviour be written once, then #bold[split], #bold[placed] and #bold[relocated at run time], with a stated guarantee of what each change preserves?
 ]
 
@@ -452,7 +452,7 @@
 
 #pdfpc.speaker-note("Act II, 10 minutes, the core of the talk. Should end at 15:00.")
 
-== The Monolithic Device
+== The pulverization model
 
 #components.side-by-side(columns: (.72fr, 1.05fr, 1.05fr), gutter: .9em)[
   #align(center + horizon)[
@@ -461,19 +461,27 @@
 ][
   === The problem
 
-  #text(size: .88em)[
-    A logical device bundles behaviour, state, neighbourhood links and physical interfaces into one unit.
+  A (macro)program typically #underline[requires different capabilities] to run:
+  - *sensors* and *actuators*
+  - *computational* resources
+  - *latency* requirements
 
-    - It has to be deployed as a whole.
-    - A constrained device cannot host it, so it stays out of the collective.
-    - The tiers above the edge stay unused.
-  ]
+  But a single physical device #underline[may not have all of them], so the program *cannot run*.
+
+  // #text(size: .88em)[
+  //   A logical device bundles behaviour, state, neighbourhood links and physical interfaces into one unit.
+
+  //   - It has to be deployed as a whole.
+  //   - A constrained device cannot host it, so it stays out of the collective.
+  //   - The tiers above the edge stay unused.
+  // ]
 ][
+  === The solution
   #feature-block("Pulverisation")[
-    _Split each logical device into computationally independent components that can be deployed, and moved, separately._
+    _#underline[Split] each logical device into computationally independent components that can be deployed, and moved, separately._
   ]
 
-  #text(size: .88em)[The collective program stays the same; what changes is how it is partitioned and where the parts run.]
+  The collective program stays the same; what changes is #bold[how it is partitioned] and #bold[where the parts run].
 ]
 
 #pdfpc.speaker-note("~55s. The figure is the continuum from Act I with everything above the edge greyed out: that is what a monolithic deployment buys you. In one sentence: keep the logical structure, dissolve the physical one.")
@@ -524,56 +532,72 @@
 
 // #pdfpc.speaker-note("~80s. Key slide. Left, the logical device: behaviour is the computation, state is what persists between rounds, communication handles the neighbour exchange, sensors and actuators are bound to the hardware. Right, the same five components regrouped: only the top group can move, and that constraint is what makes placement an interesting problem.")
 
-== Logical Structure and Physical Placement
+== Logical Structure and Physical Deployment
 
-#components.side-by-side(columns: (.8fr, 1.35fr), gutter: 1.2em)[
+#components.side-by-side(columns: (.8fr, 1.35fr), gutter: 0.95em)[
   #align(center + horizon)[
     #image("images/partitioned-macro-program.svg", width: 90%)
     #v(-.1em)
     #text(size: .62em, fill: ink.lighten(25%))[logical: component graph]
   ]
+
+  The #bold[macroprogram] is modeled as a DAG of components, each *independently deployable*.
 ][
   #align(center + horizon)[
     #image("images/system-model.svg", width: 88%)
     #v(-.1em)
     #text(size: .62em, fill: ink.lighten(25%))[physical: hosts across the continuum]
   ]
+  A _physical device_ can be either an *application* or *infrastructural* device, on which one or more components can be deployed.
 ]
 
-#v(.2em)
-#statement[
-  A deployment maps the component graph onto continuum hosts. Many mappings are valid, and the model makes the choice explicit.
-]
+// #v(.2em)
+// #statement[
+//   A deployment maps the component graph onto continuum hosts. Many mappings are valid, and the model makes the choice explicit.
+// ]
 
 #pdfpc.speaker-note("~60s. Left, what the program says; right, where it runs. The two are now independent. Sensors and actuators stay at the device tier.")
 
-== Reconfiguration at Runtime
+== Dynamic (re-)deployments
 
-#components.side-by-side(columns: (1.1fr, .95fr, .95fr), gutter: 1em)[
+#components.side-by-side(columns: (1.1fr, 1fr, .95fr), gutter: 1em)[
   #align(center + horizon)[
-    #image("images/offloading-surrogate.svg", width: 90%)
+    #image("images/offloading-surrogate.svg", width: 80%)
   ]
 ][
   === What can change
 
-  #text(size: .85em)[
-    - Which host runs behaviour or state.
-    - How components are grouped into deployable units.
-    - How many hosts take part.
-  ]
+  - Physical devices can join, leave or fail.
+  - Components can be moved between hosts.
 
-  #text(size: .85em)[All of it while the system is running @pulverisation2024.]
+  We offer a partitioning model to #underline[cope with these changes]. @pulverisation2024
+
+  // #text(size: .85em)[
+  //   - Which host runs behaviour or state.
+  //   - How components are grouped into deployable units.
+  //   - How many hosts take part.
+  // ]
+
+  // #text(size: .85em)[All of it while the system is running @pulverisation2024.]
 ][
   === What is preserved
 
-  #mini-card([Semantics], [The collective computes the same result under any valid partitioning.], color: green)
-  #v(.25em)
-  #mini-card([Consistency], [Per-round state and neighbour exchange survive a re-placement.], color: blue)
+  #mini-card(
+    [Self-organization],
+    [The partitioning #bold[preserves] the self-organization properties.],
+    // [The collective computes the same result under any valid partitioning.],
+    color: green
+  )
+  #mini-card(
+    [Functional behaviour],
+    [The system #bold[maintains its intended functionality] despite changes in deployment.],
+    // [Per-round state and neighbour exchange survive a re-placement.],
+    color: blue
+  )
 ]
 
-#v(.15em)
-#statement(fill: green.lighten(90%), stroke: green)[
-  Deployment can then be decided at runtime, rather than committed to at design time.
+#statement(accent: green)[
+  The model *preserves* the same functional behaviour and self-organizing properties of the "monolithic" deployment, even when the components are moved at run time.
 ]
 
 #pdfpc.speaker-note("~60s. The figure: one component of the device is executed by a surrogate host, and the device keeps a forward reference to it. Answer the obvious objection: if computation moves around, does the program still mean the same thing? Yes, and proving that is why the model is formalised.")
@@ -599,60 +623,60 @@ val temp: Double on Phone = on[Phone](sense())
 on[Phone] { val here = take(temp) }
 on[Edge]  { val there = take(temp) }
 ```
-  #block(width: 100%, inset: (x: .7em, y: .42em), radius: 5pt,
-    fill: red.lighten(93%), stroke: (paint: red.lighten(45%), thickness: .8pt))[
-    #text(size: .6em, fill: ink)[The edge holds a typed reference, not the reading: `take` outside the owning peer does not compile.]
-  ]
+All the invalid operations are *rejected at compile time* by the Scala type system, #bold[preventing unintended behaviors] at runtime.
+  // #block(width: 100%, inset: (x: .7em, y: .42em), radius: 5pt,
+  //   fill: red.lighten(93%), stroke: (paint: red.lighten(45%), thickness: .8pt))[
+  //   #text(size: .6em, fill: ink)[The edge holds a typed reference, not the reading: `take` outside the owning peer does not compile.]
+  // ]
 ][
-  #step-item("1", [Peers and ties], [The architecture is a type: which families exist, and who may talk to whom.])
+  #step-item("1", [Type-encoded Architecture], [The architecture is a type: which families exist, and who may talk to whom.], accent: blue)
   #v(.15em)
-  #step-item("2", [Placed values], [`V on P` says where a value lives; only `P` can open it.])
+  #step-item("2", [Placement Types], [`V on P` says where a value lives; only `P` can open it.], accent: orange)
   #v(.15em)
-  #step-item("3", [Explicit movement], [A value reaches another peer only through a communication primitive.])
-]
-
-#v(.05em)
-#statement[
-  #text(size: .7em)[Both works in this part start from this substrate, inherited from multitier programming, and ask a different question of it: CaMiL, #bold[which paradigm's operations] may be used here; ScalaTropy, #bold[which shape] the exchange has.]
+  #step-item("3", [Explicit data-flow], [A value reaches another peer only through a communication primitive.], accent: red)
 ]
 
 #pdfpc.speaker-note("~55s. Set the shared vocabulary once, so the next two slides do not each re-explain it. Peers and ties describe the architecture at the type level; a placed value V on P is owned by one peer family and everyone else holds only a typed reference; moving a value is always an explicit primitive. The last line is the roadmap for the section: two papers, one substrate, two different questions asked of it.")
 
 == CaMiL: Paradigms as Capabilities
 
-#components.side-by-side(columns: (1.25fr, 1fr), gutter: .8em)[
-  #code(highlights: (
-    (line: 2, start: 5, end: 38, fill: orange),
-    (line: 3, start: 5, end: 14, fill: blue),
-    (line: 5, start: 14, end: 27, fill: green),
-  ))[
+#components.side-by-side(columns: (1.35fr, 1fr), gutter: .8em)[
+  #codly(highlights: (
+    (line: 1, start: 19, end: 32, fill: orange),
+    (line: 2, start: 16, end: 24, fill: blue),
+    (line: 2, start: 27, end: 38, fill: green),
+    (line: 2, start: 41, end: 50, fill: purple),
+    (line: 3, start: 5, end: 13, fill: blue),
+    (line: 4, start: 13, end: 24, fill: orange),
+    (line: 5, start: 13, end: 25, fill: orange),
+    (line: 5, start: 29, end: 40, fill: green),
+    (line: 7, start: 13, end: 24, fill: orange),
+    (line: 7, start: 28, end: 37, fill: purple),
+  ))
 ```scala
 def recomm(token: Token on Phone)(using
-    Placement, Choreography, Multitier
+    Placement, Multitier, Choreography, Collective
 ) = Multitier:
-  val reqs = on[Edge] { asLocalAll(token) }
-  val auth = Choreography:
-    val ask = comm[Edge, Cloud](reqs)
-    val ok  = on[Cloud] { grant(ask) }
-    comm[Cloud, Edge](ok)
-  val recs = on[Edge] { suggest(take(auth)) }
+  val reqs: Reqs on Edge = on[Edge] { ... }
+  val auth: Grant on Edge = Choreography:
+    ...   // the Edge/Cloud protocol
+  val recs: Recs on Edge = Collective:
+    ...   // rounds over the Edge ensemble
   on[Phone] { asLocal(recs).subscribe(show) }
 ```
-]
 ][
   #mini-card([`Multitier`], [Placement across tiers; `asLocal` reads a remote placed value.], color: blue)
   #v(.15em)
   #mini-card([`Choreography`], [A global protocol; `comm` moves a placed value between peers.], color: green)
   #v(.15em)
-  #mini-card([`Collective`], [Aggregate rounds over an ensemble, emitting streams of placed values.], color: orange)
+  #mini-card([`Collective`], [Aggregate rounds over an ensemble, emitting streams of placed values.], color: purple)
 ]
 
-#v(.05em)
-#statement[
-  #text[A paradigm's operations are available only where its capability is in scope, and a boundary is crossed through the #bold[same placed values] as before. The three paradigms compose without giving up their own guarantees.]
-]
+// #statement[
+//   #text[Each paradigm's operations stay #bold[behind its own capability]: the bodies never mix. What crosses a boundary is only a #bold[placed value], the same one all three already agree on --- so the paradigms compose without giving up their guarantees.]
+// ]
 
-#pdfpc.speaker-note("~70s. Joint work with St. Gallen, Weisenburger and Salvaneschi. The observation: multitier, choreographic and aggregate programming all take a global view of a distributed system, but they are used in isolation and their guarantees do not compose. CaMiL models each as a capability — a value carrying the authority to use that paradigm's operations, passed through Scala's using clauses — over one shared substrate of placement types. Read the snippet: a multitier block opens a choreography, the choreography returns a value placed on Edge, and multitier code consumes it. Two explicit paradigm crossings, both through placed values.")
+#pdfpc.speaker-note("~70s. Joint work with St. Gallen, Weisenburger and Salvaneschi. The observation: multitier, choreographic and aggregate programming all take a global view of a distributed system, but they are used in isolation and their guarantees do not compose. CaMiL models each as a capability — a value carrying the authority to use that paradigm's operations, passed through Scala's using clauses — over one shared substrate of placement types. I have elided the bodies on purpose: what each paradigm does inside its own block is its own business, and none of it escapes. What is left visible is the seam — three values placed on Edge, produced by three different paradigms and consumed by the next one. That is the whole composition story.")
 
 == CaMiL: What the Types Rule Out
 
@@ -675,7 +699,7 @@ Choreography:
 ]
 
 #v(.05em)
-#statement(fill: green.lighten(88%), stroke: green)[
+#statement(accent: green)[
   #text(size: .68em)[A typed calculus with a #bold[soundness proof], 46 use cases from the literature re-implemented, and prototypes in Koka and Rust.]
 ]
 
@@ -791,7 +815,7 @@ yield all
 ]
 
 #v(.1em)
-#statement(fill: green.lighten(88%), stroke: green)[
+#statement(accent: green)[
   #text(size: .76em)[If it compiles, the exchange respects the declared architecture, and no peer receives a payload meant for someone else.]
 ]
 
@@ -1122,7 +1146,7 @@ yield all
 ]
 
 #v(.15em)
-#statement(fill: green.lighten(88%), stroke: green)[
+#statement(accent: green)[
   #text[The #bold[collective computation] gives the policy a #bold[global view] without requiring a deep GNN, so the #bold[per-component action space] can be used to deploy partial topologies.]
 ]
 
@@ -1145,7 +1169,7 @@ yield all
 // ]
 
 // #v(.3em)
-// #statement(fill: red.lighten(92%), stroke: red)[
+// #statement(accent: red)[
 //   #text(size: .82em)[*To fill before the review:* both plots have to be exported from the papers, no result figures are in the thesis repository.]
 // ]
 
@@ -1153,7 +1177,7 @@ yield all
 
 = Real-World Demonstrator <demo>
 
-== Project Emerge: Nine Robots, One Macro-program
+== Project Emerge: a swarm robotic platform
 
 #components.side-by-side(columns: (1fr, 1.12fr), gutter: 1.1em)[
   #align(center + horizon)[
@@ -1230,7 +1254,7 @@ yield all
   ]
 ]
 
-#statement(fill: green.lighten(88%), stroke: green)[
+#statement(accent: green)[
   // Offloading the collective program to a shared #bold[edge server], we overcome the ESP32's lack of compute power and memory, ensuring the #bold[deployment-independence] property of the model.
   We achieved a #bold[pulverized deployment] with almost computationallyless robots, preserving the #bold[deployment-independence] property of the model.
 ]
@@ -1355,7 +1379,7 @@ yield all
 // ]
 
 // #v(.3em)
-// #statement(fill: orange.lighten(90%))[
+// #statement[
 //   The direction is systems that keep adapting their execution footprint to the context and the resources they find.
 // ]
 
