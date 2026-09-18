@@ -610,7 +610,7 @@ The three paradigms #bold[differ in how behaviour is written], are used #bold[in
     [Self-organization],
     [The partitioning #bold[preserves] the self-organization properties.],
     // [The collective computes the same result under any valid partitioning.],
-    color: green
+    color: orange
   )
   #mini-card(
     [Functional behaviour],
@@ -711,22 +711,42 @@ def recomm(token: Token on Phone)(using
 == CaMiL: What the Types Rule Out
 
 #components.side-by-side(columns: (1.2fr, 1fr))[
-#codly(highlights: ((line: 7, start: 3, end: 28, fill: red),))
+#codly(
+  highlights: (
+    (line: 1, start: 1, end: 12, fill: blue),
+    (line: 4, start: 5, end: 19, fill: orange),
+    (line: 6, start: 13, end: 25, fill: orange),
+  )
+)
 ```scala
 Choreography:
   val msg: String on Phone = on[Phone](greet())
-  val f: (() => String) on Phone = on[Phone] {
+  val f: (() => String) on Phone = on[Phone]:
     () => take(msg)
-  }
   val atCloud = comm[Phone, Cloud](f)
   on[Cloud](take(atCloud)())
 ```
+
+#codly(
+  highlights: (
+    (line: 2, start: 3, end: 10, fill: red),
+    (line: 3, start: 22, end: 30, fill: red),
+    (line: 6, start: 13, end: 25, fill: red),
+  )
+)
+```scala
+Multitier:
+  on[Edge]:
+    val msgOnCloud = on[Cloud] { ... }
+    val msgOnEdge = asLocal(msgOnCloud)
+  ...
+```
 ][
-  #step-item("1", [Safe boundaries], [Paradigm scopes do not interleave: crossing happens only through a placed value.])
-  #v(.12em)
-  #step-item("2", [No capability leaks], [A placed function cannot be invoked where its captured state does not live.])
-  #v(.12em)
-  #step-item("3", [No nested-placement deadlocks], [An `on[Q]` nested in `on[P]` can never block peers waiting on it.])
+  #mini-card([Safe boundaries], [Paradigm scopes do not interleave: crossing happens only through a placed value.], color: blue)
+  #v(-0.5em)
+  #mini-card([No capability leaks], [A placed function cannot be invoked where its captured state does not live.], color: orange)
+  #v(-0.5em)
+  #mini-card([No nested-placement deadlocks], [An `on[Q]` nested in `on[P]` can never block peers waiting on it.], color: red)
 ]
 
 #statement(accent: green)[
@@ -840,9 +860,8 @@ yield all
   #shape-cell("co-anisotropic", [])
 ]
 
-#v(.1em)
 #statement(accent: green)[
-  Combines the #bold[expressiveness] of choreographic programming with the #bold[static guarantees] of placement types from Multitier programming, all in a single Scala (monadic) type system.
+  Combines the #bold[expressiveness] of choreographic programming with the #bold[static guarantees] of placement types from multitier, all in a single Scala (monadic) type system.
 ]
 
 #pdfpc.speaker-note("~70s. ScalaTropy in one slide. The first two rows are the substrate from three slides ago, so move over them fast; the third row is the contribution. The types on the right carry all three at once: the topology (ties), where values live (V on P), and the shape of each exchange. The four glyphs are the vocabulary: point-to-point, isotropic, anisotropic, co-anisotropic — the tropy in the name. Selectivity is not only an optimisation: sending each worker exactly its block is checked by the compiler, so confidentiality is structural. All of it is plain Scala types, no macros, erased at runtime.")
@@ -1286,6 +1305,30 @@ Without a partitioning model such as the pulverization, on thiny devices the col
 // // =============================================================================
 // // ACT III -- WRAP-UP (5 minutes)
 // // =============================================================================
+
+== Conclusions
+
+#components.side-by-side(columns: (1.25fr, 1fr), gutter: 1em)[
+  #align(center + horizon)[
+    #image("images/phd_thesis_infographic.svg", width: 100%)
+  ]
+][
+  #text(size: .85em)[
+    #step-item("1", [The device is divisible], [Splitting it #bold[preserves] behaviour and self-organization.], accent: eastern)
+    #v(.25em)
+    #step-item("2", [The paradigms compose], [Language support via #bold[placement types] and #bold[paradigms unification].], accent: ink)
+    #v(.25em)
+    #step-item("3", [Deployment is decided at run time], [Rules, planning, and a #bold[collective-informed] policy.], accent: orange)
+    #v(.25em)
+    #step-item("4", [It survives contact with hardware], [Testbed showcasing the model in action with #bold[real robots].], accent: aqua)
+  ]
+]
+
+#statement[
+  Collective behaviour can be #bold[partitioned], #bold[typed] and #bold[relocated at run time] fully exploiting the heterogeneity of the continuum with a #bold[real-world demonstrator].
+]
+
+#pdfpc.speaker-note("~60s. Closing the loop: this is the Contributions slide from Act I with the promises replaced by results, same map, same order, so do not re-explain any of it --- one line each and move. The three gaps were monolithic devices, isolated paradigms, static deployment; one, two and three answer them in that order, and four says the model is not only on paper. Then read the last line slowly and stop: it is the thesis in one sentence, and the same three clauses as the research question. Do not drift into future work here, the next slide has it.")
 
 // = Status and Outlook
 
