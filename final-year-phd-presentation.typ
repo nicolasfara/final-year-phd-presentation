@@ -664,18 +664,21 @@ All the invalid operations are *rejected at compile time* by the Scala type syst
 
 == CaMiL: Paradigms as Capabilities
 
-#components.side-by-side(columns: (1.35fr, 1fr), gutter: .8em)[
+#components.side-by-side(columns: (1.5fr, 1fr), gutter: .8em)[
   #codly(highlights: (
-    (line: 1, start: 19, end: 32, fill: orange),
+    // (line: 1, start: 19, end: 32, fill: orange),
     (line: 2, start: 16, end: 24, fill: blue),
     (line: 2, start: 27, end: 38, fill: green),
     (line: 2, start: 41, end: 50, fill: purple),
-    (line: 3, start: 5, end: 13, fill: blue),
-    (line: 4, start: 13, end: 24, fill: orange),
-    (line: 5, start: 13, end: 25, fill: orange),
-    (line: 5, start: 29, end: 40, fill: green),
-    (line: 7, start: 13, end: 24, fill: orange),
-    (line: 7, start: 28, end: 37, fill: purple),
+    // (line: 3, start: 5, end: 13, fill: blue),
+    // (line: 4, start: 13, end: 24, fill: orange),
+    // (line: 5, start: 13, end: 25, fill: orange),
+    (line: 6, start: 19, end: 35, fill: green),
+    (line: 8, start: 17, end: 33, fill: green),
+    // (line: 7, start: 13, end: 24, fill: orange),
+    (line: 10, start: 5, end: 16, fill: purple),
+    (line: 11, start: 7, end: 12, fill: purple),
+    (line: 12, start: 15, end: 27, fill: blue),
   ))
 ```scala
 def recomm(token: Token on Phone)(using
@@ -683,16 +686,19 @@ def recomm(token: Token on Phone)(using
 ) = Multitier:
   val reqs: Reqs on Edge = on[Edge] { ... }
   val auth: Grant on Edge = Choreography:
-    ...   // the Edge/Cloud protocol
-  val recs: Recs on Edge = Collective:
-    ...   // rounds over the Edge ensemble
+    val onCloud = comm[Edge, Cloud](reqs)
+    val tokenOnCloud = // Authentication protocol
+    val token = comm[Cloud, Edge](tokenOnCloud)
+  val recs: Signal[Recs] on Edge = Collective:
+    rep(initial): v =>
+      nbr(v).sum
   on[Phone] { asLocal(recs).subscribe(show) }
 ```
 ][
   #mini-card([`Multitier`], [Placement across tiers; `asLocal` reads a remote placed value.], color: blue)
-  #v(.15em)
+
   #mini-card([`Choreography`], [A global protocol; `comm` moves a placed value between peers.], color: green)
-  #v(.15em)
+
   #mini-card([`Collective`], [Aggregate rounds over an ensemble, emitting streams of placed values.], color: purple)
 ]
 
