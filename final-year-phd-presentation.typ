@@ -1,7 +1,7 @@
 #import "@preview/touying:0.6.3": *
 #import themes.metropolis: *
 #import "@preview/fontawesome:0.6.0": *
-#import "@preview/codly:1.3.0": codly-init
+#import "@preview/codly:1.3.0": *
 #import "@preview/cetz:0.4.2"
 #import "utils.typ": *
 
@@ -9,21 +9,21 @@
 
 // Pdfpc configuration
 // typst query --root . ./final-year-phd-presentation.typ --field value --one "<pdfpc-file>" > ./final-year-phd-presentation.pdfpc
-#let pdfpc-config = pdfpc.config(
-  duration-minutes: 20,
-  start-time: datetime(hour: 14, minute: 10, second: 0),
-  end-time: datetime(hour: 14, minute: 30, second: 0),
-  last-minutes: 3,
-  note-font-size: 12,
-  disable-markdown: false,
-  default-transition: (
-    type: "push",
-    duration-seconds: 2,
-    angle: ltr,
-    alignment: "vertical",
-    direction: "inward",
-  ),
-)
+// #let pdfpc-config = pdfpc.config(
+//   duration-minutes: 20,
+//   start-time: datetime(hour: 14, minute: 10, second: 0),
+//   end-time: datetime(hour: 14, minute: 30, second: 0),
+//   last-minutes: 3,
+//   note-font-size: 12,
+//   disable-markdown: false,
+//   default-transition: (
+//     type: "push",
+//     duration-seconds: 2,
+//     angle: ltr,
+//     alignment: "vertical",
+//     direction: "inward",
+//   ),
+// )
 
 #let supervisors = block[
   #text(size: 0.90em, fill: ink.lighten(20%))[
@@ -94,13 +94,28 @@
   aspect-ratio: "16-9",
   footer: self => self.info.institution,
   config-common(
+    show-bibliography-as-footnote: bibliography(title: none, "bibliography.bib"),
     preamble: {
       // Replayed on every slide; see `codly-setup` in utils.typ.
-      codly-setup()
-      pdfpc-config
+      // codly-setup()
+      codly(
+        languages: (
+          scala: (name: [Scala]),
+        ),
+        display-icon: false,
+        display-name: false,
+        number-format: none,
+        zebra-fill: none,
+        fill: luma(248),
+        stroke: .6pt + ink.lighten(78%),
+        radius: 10pt,
+        inset: (x: .6em, y: .18em),
+        smart-indent: false,
+        breakable: false,
+      )
+      // pdfpc-config
     },
-    show-bibliography-as-footnote: bibliography(title: none, "bibliography.bib"),
-    new-section-slide-fn: infographic-section-slide,
+    // new-section-slide-fn: infographic-section-slide,
   ),
   config-info(
     title: [Engineering Collective Systems in the Edge-Cloud Continuum: Models and Platform],
@@ -108,7 +123,7 @@
     author: author_list(
       ((first_author("Nicolas Farabegoli"), "nicolas.farabegoli@unibo.it"),),
       // logo: "images/disi.svg",
-      width: 35%,
+      // width: 35%,
     ) + supervisors,
     date: datetime.today().display("[day] [month repr:long] [year]"),
     institution: [University of Bologna — DISI],
@@ -124,12 +139,10 @@
 
 #set text(font: "Fira Sans", weight: "light", size: 20pt)
 #show math.equation: set text(font: "Fira Math")
-
-#set list(marker: text(size: 1.4em, baseline: 0.1em)[•])
-
 #set raw(tab-size: 2)
 #show raw: set text(font: "JetBrains Mono", weight: "light", size: 0.8em)
-#show raw.where(block: false): set text(size: 1.2em)
+#show raw.where(block: false): set text(size: 1.3em)
+// #show raw.line: set text(size: 0.9em)
 
 #show bibliography: set text(size: 0.75em)
 #show footnote.entry: set text(size: 0.75em)
@@ -618,7 +631,7 @@ The three paradigms #bold[differ in how behaviour is written], are used #bold[in
   (line: 2, start: 29, end: 43, fill: blue),
   (line: 4, start: 11, end: 25, fill: orange),
   (line: 4, start: 29, end: 37, fill: orange),
-  (line: 7, start: 25, end: 36, fill: red),
+  (line: 7, start: 25, end: 34, fill: red),
 ))
 ```scala
 type Phone <: { type Tie <: Single[Edge] }
@@ -636,9 +649,9 @@ All the invalid operations are *rejected at compile time* by the Scala type syst
   // ]
 ][
   #step-item("1", [Type-encoded Architecture], [The architecture is a type: which families exist, and who may talk to whom.], accent: blue)
-  #v(.15em)
+
   #step-item("2", [Placement Types], [`V on P` says where a value lives; only `P` can open it.], accent: orange)
-  #v(.15em)
+
   #step-item("3", [Explicit data-flow], [A value reaches another peer only through a communication primitive.], accent: red)
 ]
 
@@ -782,7 +795,7 @@ Choreography:
     )
   ]
 ][
-  #code(size: .78em, highlights: (
+#codly(highlights: (
     (line: 1, start: 6, end: 11, fill: blue),
     (line: 1, start: 30, end: 45, fill: blue),
     (line: 2, start: 6, end: 11, fill: blue),
@@ -792,7 +805,7 @@ Choreography:
     (line: 6, start: 11, end: 25, fill: green),
     (line: 7, start: 11, end: 20, fill: orange),
     (line: 8, start: 10, end: 26, fill: green),
-  ))[
+  ))
 ```scala
 type Master <: { type Tie <: Multiple[Worker] }
 type Worker <: { type Tie <: Single[Master] }
@@ -804,7 +817,6 @@ for
   all <- coAnisotropicComm[Worker, Master](part)
 yield all
 ```
-]
 ]
 
 #components.side-by-side(columns: (1fr, 1fr, 1fr, 1fr), gutter: .5em)[

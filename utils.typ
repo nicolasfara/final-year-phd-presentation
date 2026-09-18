@@ -121,30 +121,30 @@
 // once at the top of the document would not survive to the slides. The whole
 // configuration therefore lives here and is replayed from the theme's
 // `preamble`, which touying re-runs for each slide.
-#let codly-setup() = codly(
-  // Slides show a handful of lines, already introduced by the surrounding
-  // text: line numbers, the zebra stripes and the language tag would all be
-  // furniture the audience has no use for.
-  display-icon: false,
-  display-name: false,
-  number-format: none,
-  zebra-fill: none,
-  fill: luma(248),
-  stroke: .6pt + ink.lighten(78%),
-  radius: 10pt,
-  inset: (x: .6em, y: .25em),
-  // A snippet that splits across a slide boundary is a snippet that no longer
-  // fits, and re-indenting a wrapped line hides that from us.
-  smart-indent: false,
-  breakable: false,
-  // Highlights are the pointer: a pale tint with a thin edge, inset tightly so
-  // that marks on consecutive lines sit apart instead of touching.
-  highlight-radius: 3pt,
-  highlight-inset: (x: .25em, y: .08em),
-  highlight-outset: (x: 0pt, y: .06em),
-  highlight-fill: color => color.lighten(86%),
-  highlight-stroke: color => .7pt + color.lighten(40%),
-)
+// #let codly-setup() = codly(
+//   // Slides show a handful of lines, already introduced by the surrounding
+//   // text: line numbers, the zebra stripes and the language tag would all be
+//   // furniture the audience has no use for.
+//   display-icon: false,
+//   display-name: false,
+//   number-format: none,
+//   zebra-fill: none,
+//   fill: luma(248),
+//   stroke: .6pt + ink.lighten(78%),
+//   radius: 10pt,
+//   inset: (x: .6em, y: .25em),
+//   // A snippet that splits across a slide boundary is a snippet that no longer
+//   // fits, and re-indenting a wrapped line hides that from us.
+//   smart-indent: false,
+//   breakable: false,
+//   // Highlights are the pointer: a pale tint with a thin edge, inset tightly so
+//   // that marks on consecutive lines sit apart instead of touching.
+//   highlight-radius: 3pt,
+//   highlight-inset: (x: .25em, y: .08em),
+//   highlight-outset: (x: 0pt, y: .06em),
+//   highlight-fill: color => color.lighten(86%),
+//   highlight-stroke: color => .7pt + color.lighten(40%),
+// )
 
 /// #code
 ///
@@ -156,7 +156,7 @@
 /// - body (content): a raw block, normally a fenced ```` ```scala ... ``` ```` literal
 /// - size (length): size of the snippet, relative to the slide text size
 /// -> (content): the styled code block
-#let code(body, size: 1em, ..settings) = codly-local(text(size: size, body), ..settings)
+// #let code(body, size: 1em, ..settings) = codly-local(text(size: size, body), ..settings)
 
 #let chip(body, fill: orange.lighten(85%), stroke: orange.lighten(40%)) = box(
   inset: (x: .65em, y: .32em),
@@ -179,7 +179,7 @@
   fill: accent.lighten(88%),
   stroke: (top: (paint: accent, thickness: 3pt)),
 )[
-  #text(size: .92em, weight: "medium", fill: ink)[#body]
+  #text(size: .9em, fill: ink)[#body]
 ]
 
 #let mini-card(title, body, color: orange) = block(
