@@ -7,6 +7,11 @@
 
 #show: codly-init.with()
 
+// Temporary workaround: https://github.com/Dherse/codly/issues/131
+#let inset = 0.32em
+#state("highlight-inset").update((y: 0em, x: inset))
+#state("codly-highlight-outset").update((y: inset))
+
 // Pdfpc configuration
 // typst query --root . ./final-year-phd-presentation.typ --field value --one "<pdfpc-file>" > ./final-year-phd-presentation.pdfpc
 // #let pdfpc-config = pdfpc.config(
@@ -109,13 +114,13 @@
         fill: luma(248),
         stroke: .6pt + ink.lighten(78%),
         radius: 10pt,
-        inset: (x: .6em, y: .18em),
+        inset: (x: .6em, y: .3em),
         smart-indent: false,
         breakable: false,
       )
       // pdfpc-config
     },
-    // new-section-slide-fn: infographic-section-slide,
+    new-section-slide-fn: infographic-section-slide,
   ),
   config-info(
     title: [Engineering Collective Systems in the Edge-Cloud Continuum: Models and Platform],
