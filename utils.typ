@@ -326,3 +326,134 @@
     anchor: "center",
   )
 }
+
+// ---------------------------------------------------------------------------
+// Published results
+// ---------------------------------------------------------------------------
+
+/// #full-reference
+///
+/// The complete reference of a bibliography entry, spelled out inline.
+///
+/// Touying's footnote bibliography only rewrites `form: "normal"` citations, so
+/// a `form: "full"` one is left alone: the same key can be a footnote marker on
+/// a content slide and a written-out reference here. The leading `"[n] "` that
+/// the reference style prepends is dropped --- the entry is already introduced
+/// by the card it sits in.
+///
+/// - key (label): a key of `bibliography.bib`, e.g. `<pulverisation2024>`
+/// -> (content): the formatted reference
+#let full-reference(key) = {
+  show regex("^\[\d+\]\s"): it => ""
+  cite(key, form: "full")
+}
+
+/// #contribution
+///
+/// One published result: a paper, and the single thing it contributes *to the
+/// part of the talk it is listed under*. The same paper may therefore appear
+/// under two parts with two different sentences.
+///
+/// Everything bibliographic is taken from `bibliography.bib` through `key`, so
+/// a card never restates authors, title, venue or year.
+///
+/// - key (label): the bibliography key, e.g. `<pulverisation2024>`
+/// - body (content): the contribution, phrased for this part of the talk
+/// - tag (content, none): optional short label, shown as a chip. A venue and
+///   year (`[FGCS 2024]`, `[COORDINATION 2025]`) is the fast way to place a
+///   paper while its reference is still being read; for something with no
+///   fixed venue yet, the venue alone plus a `note` says more
+/// - note (content, none): optional status appended to the reference, for what
+///   the entry cannot say by itself --- `[under review at _ACM TOPLAS_]` for an
+///   unpublished one, a distinction, a co-located venue
+/// - accent (color, auto): card colour; `auto` takes the next palette colour
+/// -> (dictionary): an entry for `contributions`
+#let contribution(key, body, tag: none, note: none, accent: auto) = (
+  key: key,
+  body: body,
+  tag: tag,
+  note: note,
+  accent: accent,
+)
+
+/// #contributions
+///
+/// The "published results" panel: one card per paper, laid out as a list or a
+/// grid. A card is the reference in muted small type, with the contribution
+/// underneath it in full ink --- the paper is the provenance, the sentence is
+/// the claim, so the sentence is what the audience reads first.
+///
+/// Cards take their colour from `palette` in order, unless the entry fixes one.
+///
+/// ```typ
+/// #contributions(
+///   contribution(<pulverisation2024>, tag: [FGCS 2024])[
+///     The model itself: ...
+///   ],
+///   columns: 2,
+/// )
+/// ```
+///
+/// - entries (dictionary): entries built with `contribution`
+/// - columns (int): cards per row
+/// - gutter (length): space between cards
+/// - size (length): scales the whole panel, for parts with more papers than room
+/// - palette (array): the accent colours cards cycle through
+/// -> (content): the panel
+#let contributions(
+  ..entries,
+  columns: 1,
+  gutter: .5em,
+  size: 1em,
+  palette: (orange, blue, green, red),
+) = {
+  let entries = entries.pos()
+
+  let card(index, entry) = {
+    let accent = if entry.accent == auto {
+      palette.at(calc.rem(index, palette.len()))
+    } else {
+      entry.accent
+    }
+    block(
+      width: 100%,
+      inset: (left: .72em, right: .72em, top: .46em, bottom: .52em),
+      // Same shape as `statement` and `styled-block`: only the corners away
+      // from the accent edge are rounded, so the edge cannot mitre into a spike.
+      radius: (top-right: 5pt, bottom-right: 5pt),
+      fill: accent.lighten(94%),
+      stroke: (left: (paint: accent.lighten(28%), thickness: 2.4pt)),
+    )[
+      #let reference = text(size: .56 * size, fill: ink.lighten(30%))[
+        #full-reference(entry.key)
+        #if entry.note != none [
+          #h(.2em)#text(fill: accent.darken(12%))[#sym.dot.c~#emph(entry.note)]
+        ]
+      ]
+      #if entry.tag == none {
+        reference
+      } else {
+        grid(
+          columns: (auto, 1fr),
+          column-gutter: .5em,
+          align: (left + top, left + top),
+          chip(
+            text(size: .95 * size)[#entry.tag],
+            fill: accent.lighten(86%),
+            stroke: accent.lighten(38%),
+          ),
+          reference,
+        )
+      }
+      #v(.3em, weak: true)
+      #text(size: .74 * size, fill: ink)[#entry.body]
+    ]
+  }
+
+  grid(
+    columns: (1fr,) * columns,
+    column-gutter: gutter,
+    row-gutter: gutter,
+    ..entries.enumerate().map(((i, e)) => card(i, e)),
+  )
+}

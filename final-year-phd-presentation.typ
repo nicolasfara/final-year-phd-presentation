@@ -165,8 +165,6 @@
 
 = Background
 
-#pdfpc.speaker-note("Act I, 5 minutes. Context, not contribution: keep it moving and be out of this part at 05:00.")
-
 == Collective Adaptive Systems
 
 #components.side-by-side(columns: (1fr, 1fr), gutter: 1.2em)[
@@ -193,8 +191,6 @@
   #mini-card([Autonomous vehicles], [], color: orange)
 ]
 
-#pdfpc.speaker-note("~45s. Bridge slide: these systems are the workload, the continuum is the substrate. The talk is about the mismatch between the two.")
-
 == The Edge-Cloud Continuum
 
 #components.side-by-side(columns: (1.15fr, 1fr), gutter: 1em)[
@@ -212,8 +208,6 @@
     #image("images/edge-cloud-continuum.svg", height: 80%)
   ]
 ]
-
-#pdfpc.speaker-note("~60s. What matters for the rest of the talk: heterogeneity and volatility are what make a fixed deployment hard to keep working.")
 
 == Macroprogramming
 
@@ -419,8 +413,6 @@ Different paradigms make the same macro-level promise, but write and deploy it d
 
 The three paradigms #bold[differ in how behaviour is written], are used #bold[in isolation], and all of them settle deployment before the system starts.
 
-#pdfpc.speaker-note("~70s. The row that matters is the last one: all three say what the collective computes, none of them says where it runs. And the columns never meet: each paradigm is used on its own, so its guarantees stop at its own border.")
-
 == Research Gap
 
 #components.side-by-side(columns: (1fr, 1fr, 1fr), gutter: .8em)[
@@ -448,8 +440,6 @@ The three paradigms #bold[differ in how behaviour is written], are used #bold[in
   Can collective behaviour be #bold[partitioned] into independently deployable parts, #bold[written and checked] in a language that knows where they run, and #bold[placed and relocated at run time] under a semantics of what each change preserves?
 ]
 
-#pdfpc.speaker-note("~60s. Three gaps, one per act of the talk. Monolithic devices: the device is the unit of deployment, so pulverisation is the answer — act two. Isolated paradigms: each takes a global view but on its own, and placement and communication are outside the language, so nothing can be checked — that is the language act. Static deployment: the mapping is settled before the system starts and nothing says what a redeployment preserves — that is the deployment act. Then read the research question slowly: the three clauses are the three acts, in order.")
-
 == Contributions
 
 #components.side-by-side(columns: (1.25fr, 1fr), gutter: 1em)[
@@ -466,15 +456,11 @@ The three paradigms #bold[differ in how behaviour is written], are used #bold[in
   #step-item("4", [Demonstrator], [The model running on real robot hardware.])
 ]
 
-#pdfpc.speaker-note("~60s. Roadmap: the first three blocks answer the three gaps in the same order — model, languages, deployments — and the fourth shows the whole thing on real hardware. End of Act I, should be at 05:00.")
-
 // =============================================================================
 // ACT II -- MAIN CONTRIBUTION (10 minutes)
 // =============================================================================
 
 = The Pulverization Model <model>
-
-#pdfpc.speaker-note("Act II, 10 minutes, the core of the talk. Should end at 15:00.")
 
 == The pulverization model
 
@@ -507,8 +493,6 @@ The three paradigms #bold[differ in how behaviour is written], are used #bold[in
 
   The collective program stays the same; what changes is #bold[how it is partitioned] and #bold[where the parts run].
 ]
-
-#pdfpc.speaker-note("~55s. The figure is the continuum from Act I with everything above the edge greyed out: that is what a monolithic deployment buys you. In one sentence: keep the logical structure, dissolve the physical one.")
 
 // == Five Components
 
@@ -580,8 +564,6 @@ The three paradigms #bold[differ in how behaviour is written], are used #bold[in
 //   A deployment maps the component graph onto continuum hosts. Many mappings are valid, and the model makes the choice explicit.
 // ]
 
-#pdfpc.speaker-note("~60s. Left, what the program says; right, where it runs. The two are now independent. Sensors and actuators stay at the device tier.")
-
 == Dynamic (re-)deployments
 
 #components.side-by-side(columns: (1.1fr, 1fr, .95fr), gutter: 1em)[
@@ -624,7 +606,22 @@ The three paradigms #bold[differ in how behaviour is written], are used #bold[in
   The model *preserves* the same functional behaviour and self-organizing properties of the "monolithic" deployment, even when the components are moved at run time.
 ]
 
-#pdfpc.speaker-note("~60s. The figure: one component of the device is executed by a surrogate host, and the device keeps a forward reference to it. Answer the obvious objection: if computation moves around, does the program still mean the same thing? Yes, and proving that is why the model is formalised.")
+== Published Results
+
+#contributions(
+  contribution(<pulverisation2024>, tag: [FGCS 2024])[
+    The model itself: the logical device is #bold[split into five components]
+    that are deployed and moved independently, with a #bold[formal semantics]
+    proving the collective result is #bold[independent of the partitioning],
+    and a runtime that reconfigures the deployment declaratively.
+  ],
+  contribution(<flexible2024>, tag: [ACSOS 2024])[
+    Puts the model to work on the continuum: a single #bold[macro-program] whose
+    components are mapped onto cloud-edge hosts and #bold[re-placed at run time],
+    showing that self-organising behaviour survives deployment changes on a real
+    stack.
+  ],
+)
 
 = Language Support for Collective Systems <languages>
 
@@ -660,8 +657,6 @@ All the invalid operations are *rejected at compile time* by the Scala type syst
   #step-item("3", [Explicit data-flow], [A value reaches another peer only through a communication primitive.], accent: red)
 ]
 
-#pdfpc.speaker-note("~55s. Set the shared vocabulary once, so the next two slides do not each re-explain it. Peers and ties describe the architecture at the type level; a placed value V on P is owned by one peer family and everyone else holds only a typed reference; moving a value is always an explicit primitive. The last line is the roadmap for the section: two papers, one substrate, two different questions asked of it.")
-
 == CaMiL: Paradigms as Capabilities
 
 #components.side-by-side(columns: (1.5fr, 1fr), gutter: .8em)[
@@ -669,15 +664,15 @@ All the invalid operations are *rejected at compile time* by the Scala type syst
     // (line: 1, start: 19, end: 32, fill: orange),
     (line: 2, start: 16, end: 24, fill: blue),
     (line: 2, start: 27, end: 38, fill: green),
-    (line: 2, start: 41, end: 50, fill: purple),
+    (line: 2, start: 41, end: 50, fill: orange),
     // (line: 3, start: 5, end: 13, fill: blue),
     // (line: 4, start: 13, end: 24, fill: orange),
     // (line: 5, start: 13, end: 25, fill: orange),
     (line: 6, start: 19, end: 35, fill: green),
     (line: 8, start: 17, end: 33, fill: green),
     // (line: 7, start: 13, end: 24, fill: orange),
-    (line: 10, start: 5, end: 16, fill: purple),
-    (line: 11, start: 7, end: 12, fill: purple),
+    (line: 10, start: 5, end: 16, fill: orange),
+    (line: 11, start: 7, end: 12, fill: orange),
     (line: 12, start: 15, end: 27, fill: blue),
   ))
 ```scala
@@ -699,14 +694,12 @@ def recomm(token: Token on Phone)(using
 
   #mini-card([`Choreography`], [A global protocol; `comm` moves a placed value between peers.], color: green)
 
-  #mini-card([`Collective`], [Aggregate rounds over an ensemble, emitting streams of placed values.], color: purple)
+  #mini-card([`Collective`], [Aggregate rounds over an ensemble, emitting streams of placed values.], color: orange)
 ]
 
 // #statement[
 //   #text[Each paradigm's operations stay #bold[behind its own capability]: the bodies never mix. What crosses a boundary is only a #bold[placed value], the same one all three already agree on --- so the paradigms compose without giving up their guarantees.]
 // ]
-
-#pdfpc.speaker-note("~70s. Joint work with St. Gallen, Weisenburger and Salvaneschi. The observation: multitier, choreographic and aggregate programming all take a global view of a distributed system, but they are used in isolation and their guarantees do not compose. CaMiL models each as a capability — a value carrying the authority to use that paradigm's operations, passed through Scala's using clauses — over one shared substrate of placement types. I have elided the bodies on purpose: what each paradigm does inside its own block is its own business, and none of it escapes. What is left visible is the seam — three values placed on Edge, produced by three different paradigms and consumed by the next one. That is the whole composition story.")
 
 == CaMiL: What the Types Rule Out
 
@@ -753,118 +746,134 @@ Multitier:
   A typed calculus with a #bold[soundness proof] regarding the placement discipline and paradigms interoperability, 46 use cases from the literature re-implemented.
 ]
 
-#pdfpc.speaker-note("~60s. Three static guarantees, all from the capability discipline plus placement types. The snippet is the leak: a closure placed on the phone captures a phone-local value, is sent to the cloud, and is called there — it would fail at runtime, and CaMiL rejects it when compiling. Then the evidence line: the core is formalised and proved sound, 46 use cases from the multitier, choreographic and aggregate literature were re-implemented, and the design was ported to Koka and Rust to show it does not depend on Scala.")
+// == ScalaTropy: Communication Shapes as Types
 
-== ScalaTropy: Communication Shapes as Types
+// // The four communication shapes drawn as one-line glyphs: a sender on the
+// // left, receivers on the right, one arrow per message. Distinct arrow colours
+// // mean distinct payloads, which is the whole difference between isotropic and
+// // anisotropic communication.
+// #let shape-glyph(kind) = cetz.canvas(length: .58cm, {
+//   import cetz.draw: *
 
-// The four communication shapes drawn as one-line glyphs: a sender on the
-// left, receivers on the right, one arrow per message. Distinct arrow colours
-// mean distinct payloads, which is the whole difference between isotropic and
-// anisotropic communication.
-#let shape-glyph(kind) = cetz.canvas(length: .58cm, {
-  import cetz.draw: *
+//   let node(pos, color) = circle(pos, radius: .18, fill: color.lighten(88%), stroke: (paint: color, thickness: 1pt))
+//   let msg(from, to, color) = line(
+//     (from.at(0) + .22, from.at(1)),
+//     (to.at(0) - .24, to.at(1)),
+//     stroke: (paint: color, thickness: .9pt),
+//     mark: (end: ">", scale: .38),
+//   )
 
-  let node(pos, color) = circle(pos, radius: .18, fill: color.lighten(88%), stroke: (paint: color, thickness: 1pt))
-  let msg(from, to, color) = line(
-    (from.at(0) + .22, from.at(1)),
-    (to.at(0) - .24, to.at(1)),
-    stroke: (paint: color, thickness: .9pt),
-    mark: (end: ">", scale: .38),
-  )
+//   let ys = (.56, 0, -.56)
+//   let payloads = (blue, green, red)
 
-  let ys = (.56, 0, -.56)
-  let payloads = (blue, green, red)
+//   // A transparent frame, so all four glyphs share one bounding box and the
+//   // chips underneath them sit on the same line.
+//   rect((-.25, -.8), (1.95, .8), stroke: none)
 
-  // A transparent frame, so all four glyphs share one bounding box and the
-  // chips underneath them sit on the same line.
-  rect((-.25, -.8), (1.95, .8), stroke: none)
+//   if kind == "point-to-point" {
+//     msg((0, 0), (1.7, 0), orange)
+//     node((0, 0), green)
+//     node((1.7, 0), red)
+//   } else if kind == "co-anisotropic" {
+//     for (y, c) in ys.zip(payloads) { msg((0, y), (1.7, 0), c) }
+//     for y in ys { node((0, y), red) }
+//     node((1.7, 0), green)
+//   } else {
+//     let colors = if kind == "isotropic" { (orange, orange, orange) } else { payloads }
+//     for (y, c) in ys.zip(colors) { msg((0, 0), (1.7, y), c) }
+//     node((0, 0), green)
+//     for y in ys { node((1.7, y), red) }
+//   }
+// })
 
-  if kind == "point-to-point" {
-    msg((0, 0), (1.7, 0), orange)
-    node((0, 0), green)
-    node((1.7, 0), red)
-  } else if kind == "co-anisotropic" {
-    for (y, c) in ys.zip(payloads) { msg((0, y), (1.7, 0), c) }
-    for y in ys { node((0, y), red) }
-    node((1.7, 0), green)
-  } else {
-    let colors = if kind == "isotropic" { (orange, orange, orange) } else { payloads }
-    for (y, c) in ys.zip(colors) { msg((0, 0), (1.7, y), c) }
-    node((0, 0), green)
-    for y in ys { node((1.7, y), red) }
-  }
-})
+// #let shape-cell(kind, caption) = align(center + horizon)[
+//   #shape-glyph(kind)
+//   #v(-.45em)
+//   #chip(kind)
+//   #v(-.28em)
+//   #text(size: .5em, fill: ink.lighten(28%))[#caption]
+// ]
 
-#let shape-cell(kind, caption) = align(center + horizon)[
-  #shape-glyph(kind)
-  #v(-.45em)
-  #chip(kind)
-  #v(-.28em)
-  #text(size: .5em, fill: ink.lighten(28%))[#caption]
-]
+// #v(-.3em)
 
-#v(-.3em)
+// #components.side-by-side(columns: (.86fr, 1.32fr), gutter: .8em)[
+//   #let idea-row(label, color, body, fill: luma(252)) = (
+//     table.cell(fill: color.lighten(88%), inset: (x: .5em, y: .4em), align: center + horizon)[
+//       #text(size: .62em, fill: color.darken(12%), weight: "medium")[#label]
+//     ],
+//     table.cell(fill: fill, inset: (x: .55em, y: .4em), align: left + horizon)[
+//       #text(size: .62em, fill: ink)[#body]
+//     ],
+//   )
 
-#components.side-by-side(columns: (.86fr, 1.32fr), gutter: .8em)[
-  #let idea-row(label, color, body, fill: luma(252)) = (
-    table.cell(fill: color.lighten(88%), inset: (x: .5em, y: .4em), align: center + horizon)[
-      #text(size: .62em, fill: color.darken(12%), weight: "medium")[#label]
-    ],
-    table.cell(fill: fill, inset: (x: .55em, y: .4em), align: left + horizon)[
-      #text(size: .62em, fill: ink)[#body]
-    ],
-  )
+//   #block(width: 100%, inset: .2em, radius: 6pt, fill: luma(250), stroke: (paint: ink.lighten(72%), thickness: .7pt))[
+//     #table(
+//       columns: (1fr, 2.75fr),
+//       gutter: .08em,
+//       stroke: none,
+//       ..idea-row([Topology], blue, [_as before_: which #bold[peer families] exist, and which #bold[ties] are admissible]),
+//       ..idea-row([Placement], orange, [_as before_: where each #bold[value lives], written `V on P`], fill: soft),
+//       ..idea-row([Shape], green, [#bold[new]: which flow is intended --- one-to-one, broadcast, scatter or gather]),
+//     )
+//   ]
+// ][
+// #codly(highlights: (
+//     (line: 1, start: 6, end: 11, fill: blue),
+//     (line: 1, start: 30, end: 45, fill: blue),
+//     (line: 2, start: 6, end: 11, fill: blue),
+//     (line: 2, start: 30, end: 43, fill: blue),
+//     (line: 4, start: 10, end: 23, fill: orange),
+//     (line: 4, start: 28, end: 37, fill: orange),
+//     (line: 6, start: 11, end: 25, fill: green),
+//     (line: 7, start: 11, end: 20, fill: orange),
+//     (line: 8, start: 10, end: 26, fill: green),
+//   ))
+// ```scala
+// type Master <: { type Tie <: Multiple[Worker] }
+// type Worker <: { type Tie <: Single[Master] }
 
-  #block(width: 100%, inset: .2em, radius: 6pt, fill: luma(250), stroke: (paint: ink.lighten(72%), thickness: .7pt))[
-    #table(
-      columns: (1fr, 2.75fr),
-      gutter: .08em,
-      stroke: none,
-      ..idea-row([Topology], blue, [_as before_: which #bold[peer families] exist, and which #bold[ties] are admissible]),
-      ..idea-row([Placement], orange, [_as before_: where each #bold[value lives], written `V on P`], fill: soft),
-      ..idea-row([Shape], green, [#bold[new]: which flow is intended --- one-to-one, broadcast, scatter or gather]),
-    )
-  ]
-][
-#codly(highlights: (
-    (line: 1, start: 6, end: 11, fill: blue),
-    (line: 1, start: 30, end: 45, fill: blue),
-    (line: 2, start: 6, end: 11, fill: blue),
-    (line: 2, start: 30, end: 43, fill: blue),
-    (line: 4, start: 10, end: 23, fill: orange),
-    (line: 4, start: 28, end: 37, fill: orange),
-    (line: 6, start: 11, end: 25, fill: green),
-    (line: 7, start: 11, end: 20, fill: orange),
-    (line: 8, start: 10, end: 26, fill: green),
-  ))
-```scala
-type Master <: { type Tie <: Multiple[Worker] }
-type Worker <: { type Tie <: Single[Master] }
+// for
+//   tasks: Task on Master <- on[Master] { buildTasks() }
+//   work <- anisotropicComm[Master, Worker](tasks)
+//   part <- on[Worker] { take(work).map(_.compute) }
+//   all <- coAnisotropicComm[Worker, Master](part)
+// yield all
+// ```
+// ]
 
-for
-  tasks: Task on Master <- on[Master] { buildTasks() }
-  work <- anisotropicComm[Master, Worker](tasks)
-  part <- on[Worker] { take(work).map(_.compute) }
-  all <- coAnisotropicComm[Worker, Master](part)
-yield all
-```
-]
+// #components.side-by-side(columns: (1fr, 1fr, 1fr, 1fr), gutter: .5em)[
+//   #shape-cell("point-to-point", [])
+// ][
+//   #shape-cell("isotropic", [])
+// ][
+//   #shape-cell("anisotropic", [])
+// ][
+//   #shape-cell("co-anisotropic", [])
+// ]
 
-#components.side-by-side(columns: (1fr, 1fr, 1fr, 1fr), gutter: .5em)[
-  #shape-cell("point-to-point", [])
-][
-  #shape-cell("isotropic", [])
-][
-  #shape-cell("anisotropic", [])
-][
-  #shape-cell("co-anisotropic", [])
-]
+// #statement(accent: green)[
+//   Combines the #bold[expressiveness] of choreographic programming with the #bold[static guarantees] of placement types from multitier, all in a single Scala (monadic) type system.
+// ]
 
-#statement(accent: green)[
-  Combines the #bold[expressiveness] of choreographic programming with the #bold[static guarantees] of placement types from multitier, all in a single Scala (monadic) type system.
-]
+== Published Results
 
-#pdfpc.speaker-note("~70s. ScalaTropy in one slide. The first two rows are the substrate from three slides ago, so move over them fast; the third row is the contribution. The types on the right carry all three at once: the topology (ties), where values live (V on P), and the shape of each exchange. The four glyphs are the vocabulary: point-to-point, isotropic, anisotropic, co-anisotropic — the tropy in the name. Selectivity is not only an optimisation: sending each worker exactly its block is checked by the compiler, so confidentiality is structural. All of it is plain Scala types, no macros, erased at runtime.")
+#contributions(
+  contribution(<farabegoli2026capabilities>, tag: [ACM TOPLAS], note: [under review])[
+    Models each macroprogramming paradigm as a #bold[capability] over one
+    placement-typed substrate: a typed calculus with a #bold[soundness proof],
+    46 use cases from the literature re-implemented.
+  ],
+  contribution(<farabegoli2026scalatropy>, tag: [COORDINATION 2026])[
+    Lifts the #bold[shape] of a communication --- one-to-one, broadcast, scatter,
+    gather --- into the type system, combining choreographic expressiveness with
+    the static placement guarantees of multitier programming.
+  ],
+  contribution(<aguzzi2025llm>, tag: [ACM TIOT 2025])[
+    Raises the entry point of the stack: collective behaviour is specified in
+    #bold[natural language] and translated into macroprograms, keeping the
+    macroprogramming abstractions as the target of the generation.
+  ],
+)
 
 = Deployments <deployment>
 
@@ -886,33 +895,31 @@ yield all
 
 // #pdfpc.speaker-note("~80s. Three papers on one slide. The point to make out loud: deployment control is itself a collective behaviour, so the same tools apply to it. Green planning is joint work with Brogi and Forti in Pisa.")
 
-== Different Deployment Strategies
+// == Different Deployment Strategies
 
-#block(width: 100%, inset: .25em, radius: 6pt, fill: luma(250), stroke: (paint: ink.lighten(72%), thickness: .7pt))[
-  #table(
-    columns: (1.0fr, 1fr, 1fr, 1fr),
-    gutter: .08em,
-    stroke: none,
-    comparison-header[Policy],
-    comparison-header[What it is told],
-    comparison-header[What it buys],
-    comparison-header[What it costs],
-    comparison-label(inset: (x: .55em, y: .4em))[#chip([A], fill: blue.lighten(88%), stroke: blue.lighten(38%)) Local rule #cite(<flexible2024>)],
-    comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[offload when below a given battery threshold]],
-    comparison-cell(fill: green.lighten(94%), inset: (x: .45em, y: .4em))[#text(size: .68em)[#bold[extended battery life] compared to baseline]],
-    comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[latency: extra hops to the surrogate]],
-    comparison-label(inset: (x: .55em, y: .4em))[#chip([B], fill: green.lighten(88%), stroke: green.lighten(35%)) Field regions @dynamiciot2024],
-    comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[leaders resize their region to match their own load]],
-    comparison-cell(fill: green.lighten(94%), inset: (x: .45em, y: .4em))[#text(size: .68em)[#bold[spatially-aware] offloading, and #bold[failure tolerant]]],
-    comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[a stabilisation transient depending on the topology]],
-    comparison-label(inset: (x: .55em, y: .4em))[#chip([C], fill: orange.lighten(85%), stroke: orange.lighten(40%)) Prolog planner @brogi2025green],
-    comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[an energy/carbon objective with latency bounds]],
-    comparison-cell(fill: green.lighten(94%), inset: (x: .45em, y: .4em))[#text(size: .68em)[#bold[a third of the energy] and #bold[carbon] consumption]],
-    comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[sub-optimal performance; a replan every 30 min]],
-  )
-]
-
-#pdfpc.speaker-note("~75s. The concrete results behind the previous slide, one row each. A: the two charts in the paper say where the cost lands — the offloaded devices have more battery, not less, so the price is paid in messages. B: quality of service is the share of devices that manage to offload at all; the field-based policy beats the nearest-hop baseline once its regions settle, and can dip below it during the transient. It helps more on scale-free than on lobster topologies, because removing a node from a lobster network segments it. C: joint work with Brogi and Forti in Pisa — roughly a third of the energy at every network size, and the baseline's carbon tracks the day-night sinusoid exactly because its deployment never changes. Then land the last line: that is the requirement the next slides drop.")
+// #block(width: 100%, inset: .25em, radius: 6pt, fill: luma(250), stroke: (paint: ink.lighten(72%), thickness: .7pt))[
+//   #table(
+//     columns: (1.0fr, 1fr, 1fr, 1fr),
+//     gutter: .08em,
+//     stroke: none,
+//     comparison-header[Policy],
+//     comparison-header[What it is told],
+//     comparison-header[What it buys],
+//     comparison-header[What it costs],
+//     comparison-label(inset: (x: .55em, y: .4em))[#chip([A], fill: blue.lighten(88%), stroke: blue.lighten(38%)) Local rule #cite(<flexible2024>)],
+//     comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[offload when below a given battery threshold]],
+//     comparison-cell(fill: green.lighten(94%), inset: (x: .45em, y: .4em))[#text(size: .68em)[#bold[extended battery life] compared to baseline]],
+//     comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[latency: extra hops to the surrogate]],
+//     comparison-label(inset: (x: .55em, y: .4em))[#chip([B], fill: green.lighten(88%), stroke: green.lighten(35%)) Field regions @dynamiciot2024],
+//     comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[leaders resize their region to match their own load]],
+//     comparison-cell(fill: green.lighten(94%), inset: (x: .45em, y: .4em))[#text(size: .68em)[#bold[spatially-aware] offloading, and #bold[failure tolerant]]],
+//     comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[a stabilisation transient depending on the topology]],
+//     comparison-label(inset: (x: .55em, y: .4em))[#chip([C], fill: orange.lighten(85%), stroke: orange.lighten(40%)) Prolog planner @brogi2025green],
+//     comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[an energy/carbon objective with latency bounds]],
+//     comparison-cell(fill: green.lighten(94%), inset: (x: .45em, y: .4em))[#text(size: .68em)[#bold[a third of the energy] and #bold[carbon] consumption]],
+//     comparison-cell(inset: (x: .45em, y: .4em))[#text(size: .68em)[sub-optimal performance; a replan every 30 min]],
+//   )
+// ]
 
 == Learning the Placement
 
@@ -1066,11 +1073,7 @@ yield all
   })
 ]
 
-
 Device class and link quality are part of the graph itself, so the policy sees the heterogeneity of the continuum instead of a flat topology.#cite(<farabegoli2026gnn>)
-
-
-#pdfpc.speaker-note("~70s. Walk left to right, then the dashed feedback arrow. The novelty is the heterogeneous graph: earlier work flattens the topology and throws away the device diversity that makes placement hard.")
 
 == Informing the Policy with Collective State
 
@@ -1194,8 +1197,6 @@ Device class and link quality are part of the graph itself, so the policy sees t
   #text[The #bold[collective computation] gives the policy a #bold[global view] without requiring a deep GNN, so the #bold[per-component action space] can be used to deploy partial topologies.]
 ]
 
-#pdfpc.speaker-note("~100s. The slide that carries the chapter, so give it time. Left first: the two node types do not carry the same features. An application device is battery, processor load, and the collective term; an infrastructural device is price, spare capacity, latency. Different dimensions, different meanings, so there is no single input layer --- each type gets its own projection into the shared space where the per-edge-type messages are summed, and the Q-head is applied only at application devices, since servers take no decisions. Then point at the orange chip: that third feature is the one no device can measure about itself. Congestion is caused by the offloading decisions themselves and belongs to an area; a GNN could recover it, but only by being deep enough to carry it across the whole crowded region. An aggregate program computes it natively on the same devices, self-stabilising, no synchronisation barrier with the learner, so the field can be refreshed several times between decisions. Then move right, to the ablation --- same learner, same graph, same environment, one feature apart. With the field the policy is differentiated by position: dense zones stay local, sparse regions offload, and the fringe devices split their components, which is the group to point at, because partial deployments are exactly what the per-component action space was introduced to make available. Remove only the density term and every device settles on roughly the same fraction regardless of where it sits. If asked about generalisation: the trained network was applied unchanged while three devices walked out of a dense zone at t=100, and by t=150 they had switched to offloading on their own, following the field rather than the positions it was trained on. If asked about the objectives: the weighted reward moves the outcome along a battery-versus-cost curve, and single-objective settings give the extreme each one asks for. Close on the statement.")
-
 // == Evaluation
 
 // #components.side-by-side(columns: (1fr, 1fr), gutter: 1em)[
@@ -1218,6 +1219,33 @@ Device class and link quality are part of the graph itself, so the policy sees t
 // ]
 
 // #pdfpc.speaker-note("~50s. Fill this slide. Once the figures are in, quote the headline numbers from each paper.")
+
+== Published Results
+
+#contributions(
+  columns: 2,
+  size: .92em,
+  contribution(<flexible2024>, tag: [ACSOS 2024])[
+    A macro-programming approach to offloading in the continuum: each device
+    applies a #bold[local rule] and hands its components to a surrogate,
+    #bold[extending battery life] against the monolithic baseline.
+  ],
+  contribution(<dynamiciot2024>, tag: [Internet of Things 2024])[
+    Turns the deployment itself into a collective behaviour: leaders resize
+    their #bold[region] to match their own load, giving #bold[spatially-aware]
+    and #bold[failure-tolerant] offloading.
+  ],
+  contribution(<brogi2025green>, tag: [COORDINATION 2025])[
+    A #bold[declarative planner] that searches the placement space under latency
+    bounds with an energy and carbon objective, cutting both to roughly
+    #bold[a third] of the baseline.
+  ],
+  contribution(<farabegoli2026gnn>, tag: [FGCS 2026])[
+    Learns the placement instead of prescribing it: a #bold[heterogeneous GNN]
+    trained with deep Q-learning, informed by a #bold[collective density field]
+    that gives the policy a global view without a deep network.
+  ],
+)
 
 = Real-World Demonstrator <demo>
 
@@ -1300,11 +1328,23 @@ Without a partitioning model such as the pulverization, on thiny devices the col
   We achieved a #bold[pulverized deployment] with almost computationallyless robots, preserving the #bold[deployment-independence] property of the model.
 ]
 
-#pdfpc.speaker-note("~55s. Ran twice as a public exhibit at the Researchers' Night, indoors, with people walking through the arena. Five programs, chosen to exercise different coordination requirements --- symmetry, alignment, leader-based coordination --- rather than to look varied, and switched over the broker while the team was running: that is what the homogeneous-loading requirement was for, and the audience sees one formation dissolve into the next without a restart. The dashboard was part of the exhibit rather than an operator tool, because the neighbourhood relation is invisible otherwise; a visitor could drag the radius and watch the formation reorganise. Now the photo strip, which is the result worth having. Simulation confirmed that an offloaded deployment converges where a monolithic one does, under mobility and interrupted movement. A physical arena admits a perturbation neither of those covers --- a hand. Formation reached, a robot picked up and put somewhere else mid-execution, formation recovered with no intervention, every time it was tried. Be honest about its status: qualitative, nothing measured, so it supports the claim that self-stabilisation survives physical embodiment and adversarial handling, and no claim about recovery time or how deployments compare. Then the orange box, unprompted, because the review will ask: the deployment here is fixed by hand and never revised, so the demonstrator exercises none of the reconfiguration or the learned offloading from Act II, and it runs one aggregate program rather than a component DAG. It is one point of the deployment space, realised on hardware --- and, because the simulator can replace robots and camera behind the same broker interface, it is the natural place to exercise the rest. End of Act II, should be at 15:00.")
-
 // // =============================================================================
 // // ACT III -- WRAP-UP (5 minutes)
 // // =============================================================================
+
+== Published Results
+
+#contributions(
+  contribution(<aguzzi2025demonstrator>, tag: [COORDINATION 2025])[
+    An #bold[open-hardware, open-source] swarm platform whose robots cannot host
+    a runtime at all: the collective program is executed by a shared surrogate,
+    so the testbed is a #bold[pulverized deployment] built and exhibited on real
+    hardware.
+  ],
+  contribution(<projectemerge2027>, tag: [Science of Computer Programming 2027])[
+    Journal version of the demonstrator paper, with a #bold[reproducible] and #bold[self-stabilising] formation, and a #bold[public repository] for the hardware and software.
+  ],
+)
 
 == Conclusions
 
@@ -1327,8 +1367,6 @@ Without a partitioning model such as the pulverization, on thiny devices the col
 #statement[
   Collective behaviour can be #bold[partitioned], #bold[typed] and #bold[relocated at run time] fully exploiting the heterogeneity of the continuum with a #bold[real-world demonstrator].
 ]
-
-#pdfpc.speaker-note("~60s. Closing the loop: this is the Contributions slide from Act I with the promises replaced by results, same map, same order, so do not re-explain any of it --- one line each and move. The three gaps were monolithic devices, isolated paradigms, static deployment; one, two and three answer them in that order, and four says the model is not only on paper. Then read the last line slowly and stop: it is the thesis in one sentence, and the same three clauses as the research question. Do not drift into future work here, the next slide has it.")
 
 // = Status and Outlook
 
